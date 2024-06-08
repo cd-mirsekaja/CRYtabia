@@ -7,9 +7,7 @@ Created on Fri Jun  7 10:45:33 2024
 """
 
 import pandas as pd
-#from gooey import Gooey, GooeyParser
 import tkinter as tk
-
 import os
 
 script_directory = os.path.dirname(os.path.abspath(__file__))
