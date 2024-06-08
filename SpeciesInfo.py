@@ -110,7 +110,7 @@ def choose_input(selectorframe):
 	
 	
 	
-	return selector#,input_field
+	return selector
 
 
 # function for putting search results into the text field
@@ -120,41 +120,46 @@ def text_box(selection,query,output_field,output_label):
 		sciName,authority,taxPath,taxGroup=find_taxinfo(TAXO_LIBRARY,query.get())
 		habitats=find_habitat(HABITAT_LIBRARY, query.get())
 		success_text=[
-			"---------------------------------------------------"+"\n",
-			f"{sciName} {authority} - belongs to the {taxGroup}.\n",
+			f"\n{sciName} {authority} belongs to the {taxGroup}.\n",
 			f"The Species is known to live in {habitats} habitats."+"\n"+"\n",
 			"Taxonomic Information: ",
 			taxPath+"\n",
-			"---------------------------------------------------"+"\n"
+			"\n---------------------------------------------------"+"\n"
 			]
 	elif selection.get()=="Scientific Name":
 		acc_number,acc_list=sciname_to_accnumber(TAXO_LIBRARY, query.get())
 		sciName,authority,taxPath,taxGroup=find_taxinfo(TAXO_LIBRARY,acc_number)
 		habitats=find_habitat(HABITAT_LIBRARY, acc_number)
 		success_text=[
-			"---------------------------------------------------"+"\n",
-			f"{sciName} {authority} - belongs to the {taxGroup}.\n",
+			f"\n{sciName} {authority} belongs to the {taxGroup}.\n",
 			f"The Species is known to live in {habitats} habitats.\n\n",
 			f"Available Accession Numbers are {', '.join(acc_list)}\n\n",
 			"Taxonomic Information: ",
 			taxPath+"\n",
-			"---------------------------------------------------"+"\n"
+			"\n---------------------------------------------------"+"\n"
 			]
 	
-	fail_text=f"\n{selection.get()} {query.get()} was not found in Table.\nPlease enter something else.\n"
+	fail_text=[
+		f"\n{selection.get()} {query.get()} was not found in Table.\nPlease enter something else.\n",
+		"\n---------------------------------------------------"+"\n"
+		]
+	
+	none_text=[
+		"\nPlease enter something.\n"
+		"\n---------------------------------------------------"+"\n"
+		]
 	
 	# check if an input was given
 	if query.get()=="":
-		output_field.insert(tk.END,"\nPlease enter something.\n")
+		output_field.insert(1.0,''.join(none_text))
 	# check if something was found in the table
 	elif sciName!="":
-		output_label.config(text=f"Available information on {query.get()}")
-		output_field.delete(1.0,tk.END)
-		output_field.insert(tk.END,''.join(success_text))
+		output_label.config(text=f"Available information on {query.get()}:")
+		output_field.insert(1.0,''.join(success_text))
 	# check if nothing was found in the table
 	elif sciName=="":
 		output_label.config(text=f"No information available for {query.get()}")
-		output_field.insert(tk.END,fail_text)
+		output_field.insert(1.0,''.join(fail_text))
 
 
 # function for clearing out the text and input fields
