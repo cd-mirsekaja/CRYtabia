@@ -1,0 +1,38 @@
+description="Below you can choose whether to input an accession number or scientific name. \nYou will then get some information on the provided query."
+
+@Gooey(disable_stop_button=True,show_restart_button=False,show_success_modal=False,program_name="Find Species Information",program_description=description,hide_progress_msg=True)
+def gooey_main():
+	parser = GooeyParser()
+	
+	parser.add_argument("option",choices=["Accession Number","Scientific Name"],help="Choose where to start.",metavar="Choose Input")
+	parser.add_argument("input",action="store",help="Please enter your query.",metavar="Input Query")
+	
+	args=parser.parse_args()
+	
+	if args.option=="Accession Number":
+		sciName,authority,taxPath,taxGroup=find_taxinfo(TAXO_LIBRARY,args.input)
+		habitats=find_habitat(HABITAT_LIBRARY, args.input)
+	elif args.option=="Scientific Name":
+		acc_number=sciname_to_accnumber(TAXO_LIBRARY, args.input)
+		sciName,authority,taxPath,taxGroup=find_taxinfo(TAXO_LIBRARY,acc_number)
+		habitats=find_habitat(HABITAT_LIBRARY, acc_number)
+	else:
+		print("Please enter a valid Option.")
+	
+	
+	
+	if sciName!="":
+		print("---------------------------------------------------"+"\n")
+		print(f"Input: {args.input}"+"\n")
+		print(f"{sciName} {authority} - belongs to the {taxGroup}.")
+		print(f"The Species is knowwn to live in {habitats} habitats."+"\n")
+		print("Taxonomic Information: ")
+		print(taxPath+"\n")
+	else:
+		print(f"{args.option} {args.input} was not found in Table.\nPlease try again.\n")
+
+
+def select_input(selectorframe,window):
+	pass
+	
+#gooey_main()
