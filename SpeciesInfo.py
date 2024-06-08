@@ -4,19 +4,25 @@
 Created on Fri Jun  7 10:45:33 2024
 
 @author: Ronja Roesner
+
+Program for getting info on a given species from the included reference table.
+Comments are always above the commented line.
+
 """
 
 import pandas as pd
 import tkinter as tk
 import os
 
+
 script_directory = os.path.dirname(os.path.abspath(__file__))
 INPUT_TABLE = os.path.join(script_directory, "infolib.xlsx")
 
+# get specific columns containing either taxonomic info or habitat info from reference table
 TAXO_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="B:F")
 HABITAT_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="B,G:J")
 
-
+# function returns the accession numbers matched to a given scientific name
 def sciname_to_accnumber(table,sciName):
 	matched_lines = table[table[table.columns[1]] == sciName].index.tolist()
 	if matched_lines!=[]:
@@ -26,18 +32,19 @@ def sciname_to_accnumber(table,sciName):
 	else:
 		return "",""
 
+# function for matching a given accession number with the reference table and returning extracted taxonomic information
 def find_taxinfo(table,ac_number):
-# Search for the accession number in the table
+	# search for accession number in table
 	matched_lines = table[table[table.columns[0]] == ac_number].index.tolist()
 	
 	if matched_lines!=[]:
-		# output the species and taxon group
+		# save the species and taxon group to list variables
 		species_values = table.iloc[matched_lines,1].values.tolist()
 		authority_values = table.iloc[matched_lines,2].values.tolist()
 		taxgroup_values = table.iloc[matched_lines,3].values.tolist()
 		taxpath_values = table.iloc[matched_lines,4].values.tolist()
 		
-		# Join the list elements into strings
+		# join the individual list elements into strings
 		species_str = ''.join(map(str, species_values))
 		authority_str = ''.join(map(str, authority_values))
 		taxgroup_str = ''.join(map(str, taxgroup_values))
@@ -48,22 +55,29 @@ def find_taxinfo(table,ac_number):
 		return "","","",""
 
 
+# function for matching a given accession number with the reference table and returning extracted habitat information
 def find_habitat(table,ac_number):
+	# search for accession number in table
 	matched_lines = table[table[table.columns[0]] == ac_number].index.tolist()
 	out_list=[]
 	
+	# check if habitat is marine
 	if table.iloc[matched_lines,1].values.size>0:
 		out_list.append("marine")
-		
+	
+	# check if habitat is brackish
 	if table.iloc[matched_lines,2].values.size>0:
 		out_list.append("brackish")
-		
+	
+	# check if habitat is fresh
 	if table.iloc[matched_lines,3].values.size>0:
 		out_list.append("freshwater")
-		
+	
+	# check if habitat is terrestrial
 	if table.iloc[matched_lines,4].values.size>0:
 		out_list.append("terrestrial")
-		
+	
+	# make the output string
 	if out_list!=[]:
 		out_string=', '.join(map(str,out_list))
 	else:
@@ -81,7 +95,6 @@ def choose_input(selectorframe):
 	# radiobuttons
 	selector=tk.StringVar()
 	selector.set("Accession Number")
-	#selection="Accession Number"
 	
 	chooselabel=tk.Label(selectorframe,text=f"Input {selector.get()}",font="Arial 14")
 	chooselabel.grid(row=0,column=1,sticky="nw")
@@ -102,6 +115,7 @@ def choose_input(selectorframe):
 
 # function for putting search results into the text field
 def text_box(selection,query,output_field,output_label):
+	# check for input of radio buttons
 	if selection.get()=="Accession Number":
 		sciName,authority,taxPath,taxGroup=find_taxinfo(TAXO_LIBRARY,query.get())
 		habitats=find_habitat(HABITAT_LIBRARY, query.get())
@@ -128,18 +142,22 @@ def text_box(selection,query,output_field,output_label):
 			]
 	
 	fail_text=f"\n{selection.get()} {query.get()} was not found in Table.\nPlease enter something else.\n"
-		
 	
+	# check if an input was given
 	if query.get()=="":
 		output_field.insert(tk.END,"\nPlease enter something.\n")
+	# check if something was found in the table
 	elif sciName!="":
 		output_label.config(text=f"Available information on {query.get()}")
 		output_field.delete(1.0,tk.END)
 		output_field.insert(tk.END,''.join(success_text))
+	# check if nothing was found in the table
 	elif sciName=="":
 		output_label.config(text=f"No information available for {query.get()}")
 		output_field.insert(tk.END,fail_text)
 
+
+# function for clearing out the text and input fields
 def reset(output_field,text_input,output_label):
 	output_field.config(state="normal")
 	output_field.delete(1.0,tk.END)
@@ -149,7 +167,7 @@ def reset(output_field,text_input,output_label):
 
 # main function
 def main():
-	
+	# make root window
 	window=tk.Tk()
 	window.title("Species Information Extractor v2")
 	window.geometry("1280x720")
@@ -177,11 +195,12 @@ def main():
 	selection=tk.StringVar()
 	query=tk.StringVar()
 	
-	# text field creation
+	# frame for output
 	outputframe=tk.Frame(window,borderwidth=10)
 	outputframe.columnconfigure(0,weight=1)
 	outputframe.pack(pady=20,padx=20)
 	
+	# text field
 	output_field=tk.Text(outputframe,width=400,height=40,state="disabled")
 	
 	# text field label
