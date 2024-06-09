@@ -19,8 +19,8 @@ script_directory = os.path.dirname(os.path.abspath(__file__))
 INPUT_TABLE = os.path.join(script_directory, "infolib.xlsx")
 
 # get specific columns containing either taxonomic info or habitat info from reference table
-TAXO_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="B:F")
-HABITAT_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="B,G:J")
+TAXO_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="B:H")
+HABITAT_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="B,I:L")
 
 # function returns the accession numbers matched to a given scientific name
 def sciname_to_accnumber(table,sciName):
@@ -42,7 +42,9 @@ def find_taxinfo(table,ac_number):
 		species_values = table.iloc[matched_lines,1].values.tolist()
 		authority_values = table.iloc[matched_lines,2].values.tolist()
 		taxgroup_values = table.iloc[matched_lines,3].values.tolist()
-		taxpath_values = table.iloc[matched_lines,4].values.tolist()
+		engName_values = table.iloc[matched_lines,4].values.tolist()
+		gerName_values = table.iloc[matched_lines,5].values.tolist()
+		taxpath_values = table.iloc[matched_lines,6].values.tolist()
 		
 		# join the individual list elements into strings
 		species_str = ''.join(map(str, species_values))
@@ -50,7 +52,10 @@ def find_taxinfo(table,ac_number):
 		taxgroup_str = ''.join(map(str, taxgroup_values))
 		taxpath_str = ''.join(map(str, taxpath_values))
 		
-		return species_str,authority_str,taxpath_str,taxgroup_str
+		engName_str = ''.join(map(str, engName_values))
+		gerName_str = ''.join(map(str, gerName_values))
+		
+		return species_str,authority_str,taxpath_str,taxgroup_str,engName_str,gerName_str
 	else:
 		return "","","",""
 
@@ -115,24 +120,44 @@ def choose_input(selectorframe):
 
 # function for putting search results into the text field
 def text_box(selection,query,output_field,output_label):
+	# function for changing the output sentence on vernaculars depending on which are available
+	def vernacular_text(engName,gerName):
+		if engName=="nan" and gerName=="nan":
+			text_out="There are no vernaculars available."
+		elif engName=="nan" and gerName!="nan":
+			text_out=f"There is no english vernacular available, but the german vernacular is {gerName}."
+		elif engName!="nan" and gerName=="nan":
+			text_out=f"The english vernacular is {engName}. There is no german vernacular available."
+		else:
+			text_out=f"The english vernacular is {engName}, the german vernacular is {gerName}."
+		
+		return text_out
+	
 	# check for input of radio buttons
 	if selection.get()=="Accession Number":
-		sciName,authority,taxPath,taxGroup=find_taxinfo(TAXO_LIBRARY,query.get())
+		sciName,authority,taxPath,taxGroup,engName,gerName=find_taxinfo(TAXO_LIBRARY,query.get())
 		habitats=find_habitat(HABITAT_LIBRARY, query.get())
+		
+		vern_text=vernacular_text(engName, gerName)
 		success_text=[
-			f"\n{sciName} {authority} belongs to the {taxGroup}.\n",
-			f"The Species is known to live in {habitats} habitats."+"\n"+"\n",
+			f"\n{sciName} {authority} belongs to the {taxGroup}.",
+			vern_text+"\n",
+			f"\nThe Species is known to live in {habitats} habitats."+"\n"+"\n",
 			"Taxonomic Information: ",
 			taxPath+"\n",
 			"\n---------------------------------------------------"+"\n"
 			]
+		
 	elif selection.get()=="Scientific Name":
 		acc_number,acc_list=sciname_to_accnumber(TAXO_LIBRARY, query.get())
-		sciName,authority,taxPath,taxGroup=find_taxinfo(TAXO_LIBRARY,acc_number)
+		sciName,authority,taxPath,taxGroup,engName,gerName=find_taxinfo(TAXO_LIBRARY,acc_number)
 		habitats=find_habitat(HABITAT_LIBRARY, acc_number)
+		
+		vern_text=vernacular_text(engName, gerName)
 		success_text=[
 			f"\n{sciName} {authority} belongs to the {taxGroup}.\n",
-			f"The Species is known to live in {habitats} habitats.\n\n",
+			vern_text+"\n",
+			f"\nThe Species is known to live in {habitats} habitats.\n\n",
 			f"Available Accession Numbers are {', '.join(acc_list)}\n\n",
 			"Taxonomic Information: ",
 			taxPath+"\n",
@@ -234,7 +259,6 @@ def main():
 	
 	# loop the program while the window is open
 	window.mainloop()
-
 
 
 main()
