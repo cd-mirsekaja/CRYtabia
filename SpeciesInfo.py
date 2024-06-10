@@ -19,7 +19,7 @@ script_directory = os.path.dirname(os.path.abspath(__file__))
 INPUT_TABLE = os.path.join(script_directory, "infolib.xlsx")
 
 # get specific columns containing either taxonomic info or habitat info from reference table
-TAXO_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="B:H")
+TAXO_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="B:N")
 HABITAT_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="B,I:L")
 
 # function returns the accession numbers matched to a given scientific name
@@ -39,18 +39,18 @@ def get_info_by_accnumber(table,ac_number):
 	
 	if matched_lines!=[]:
 		# save the species and taxon group to list variables
-		species_values = table.iloc[matched_lines,1].values.tolist()
-		authority_values = table.iloc[matched_lines,2].values.tolist()
-		taxgroup_values = table.iloc[matched_lines,3].values.tolist()
-		engName_values = table.iloc[matched_lines,4].values.tolist()
-		gerName_values = table.iloc[matched_lines,5].values.tolist()
-		taxpath_values = table.iloc[matched_lines,6].values.tolist()
+		species_values = table.iloc[matched_lines,1].values
+		authority_values = table.iloc[matched_lines,2].values
+		taxgroup_values = table.iloc[matched_lines,3].values
+		engName_values = table.iloc[matched_lines,4].values
+		gerName_values = table.iloc[matched_lines,5].values
+		taxpath_values = table.iloc[matched_lines,6:12].values
 		
 		# join the individual list elements into strings
 		species_str = ''.join(map(str, species_values))
 		authority_str = ''.join(map(str, authority_values))
 		taxgroup_str = ''.join(map(str, taxgroup_values))
-		taxpath_str = ''.join(map(str, taxpath_values))
+		taxpath_str = ' > '.join(map(str, taxpath_values.flatten()))
 		
 		engName_str = ''.join(map(str, engName_values))
 		gerName_str = ''.join(map(str, gerName_values))
@@ -151,8 +151,7 @@ def text_box(selection,query,output_field,output_label):
 			f"\n{sciName} {authority} belongs to the {taxGroup}.",
 			vern_text+"\n",
 			f"\nThe Species is known to live in {habitats} habitats."+"\n"+"\n",
-			"Taxonomic Information: ",
-			taxPath+"\n",
+			f"Taxonomic Path: {taxPath}\n",
 			"\n---------------------------------------------------"+"\n"
 			]
 		
@@ -167,8 +166,7 @@ def text_box(selection,query,output_field,output_label):
 			vern_text+"\n",
 			f"\nThe Species is known to live in {habitats} habitats.\n\n",
 			f"Available Accession Numbers are {', '.join(acc_list)}\n\n",
-			"Taxonomic Information: ",
-			taxPath+"\n",
+			f"Taxonomic Path: {taxPath}\n",
 			"\n---------------------------------------------------"+"\n"
 			]
 	
@@ -273,6 +271,7 @@ def main():
 	
 	# make it so the input can be cofirmed by pressing return
 	window.bind("<Return>",lambda x: confirm())
+	window.bind("<Escape>",lambda x: reset(output_field,text_input,output_label))
 	
 	# loop the program while the window is open
 	window.mainloop()
