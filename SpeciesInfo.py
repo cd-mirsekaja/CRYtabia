@@ -64,7 +64,7 @@ def get_info_by_accnumber(table,ac_number):
 # function for matching a given taxon group with the reference table and returning the species belonging to that taxon
 def get_info_by_taxon_group(table,taxGroup):
 	matched_lines_taxgroup=table[table[table.columns[13]] == taxGroup].index.tolist()
-	if matched_lines_taxgroup!=[]: matched_title=table.columns[3]
+	if matched_lines_taxgroup!=[]: matched_title=table.columns[13]
 	matched_lines_kingdom=table[table[table.columns[1]] == taxGroup].index.tolist()
 	if matched_lines_kingdom!=[]: matched_title=table.columns[1]
 	matched_lines_phylum=table[table[table.columns[2]] == taxGroup].index.tolist()
