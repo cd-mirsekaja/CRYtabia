@@ -124,16 +124,19 @@ def choose_input(selectorframe):
 	# input choosing label
 	tk.Label(selectorframe,text="Search Library by",font="Arial 14").grid(row=0,column=0,padx=20,sticky="nw")
 	
-	# radiobuttons
+	# set variable for storing the radiobutton selection
 	selector=tk.StringVar()
 	selector.set("Accession Number")
 	
+	# set label for above the input box
 	chooselabel=tk.Label(selectorframe,text=f"Input {selector.get()}",font="Arial 14")
 	chooselabel.grid(row=0,column=1,sticky="nw")
 	
+	# function for when the radiobuttons change
 	def clicked():
 		chooselabel.config(text=f"Input {selector.get()}")
 	
+	# set radiobuttons and render them into the selection grid
 	option1=tk.Radiobutton(selectorframe,text="Accession Number",variable=selector,value="Accession Number",command=lambda:clicked())
 	option1.grid(row=1,column=0,padx=20,sticky="nw")
 	option2=tk.Radiobutton(selectorframe,text="Scientific Name",variable=selector,value="Scientific Name",command=lambda:clicked())
@@ -141,11 +144,22 @@ def choose_input(selectorframe):
 	option3=tk.Radiobutton(selectorframe,text="Taxon Group",variable=selector,value="Taxon Group",command=lambda:clicked())
 	option3.grid(row=3,column=0,padx=20,sticky="nw")
 	
-	# possible option menu instead of radiobuttons
-	#options=["Accession Number","Scientific Name","Taxon Group"]
-	#optionmenu=tk.OptionMenu(selectorframe, selector, *options,command=lambda:clicked())
-	#optionmenu.grid(row=3,column=1,sticky="nw",pady=5)
-
+	# functions for binding keyboard shortcuts
+	def select_option1(event=None):
+		selector.set("Accession Number")
+		clicked()
+	def select_option2(event=None):
+		selector.set("Scientific Name")
+		clicked()
+	def select_option3(event=None):
+		selector.set("Taxon Group")
+		clicked()
+	
+	# bind keyboard shortcuts for switching between radiobuttons
+	selectorframe.bind_all("<Command-Key-1>", select_option1)
+	selectorframe.bind_all("<Command-Key-2>", select_option2)
+	selectorframe.bind_all("<Command-Key-3>", select_option3)
+	
 	return selector
 
 
@@ -230,6 +244,9 @@ def text_box(selection,query,output_field,output_label):
 		output_field.insert(1.0,''.join(fail_text))
 
 
+def choose_options(selector):
+	print("It worked!")
+
 # function for clearing out the text and input fields
 def reset(output_field,text_input,output_label):
 	output_field.config(state="normal")
@@ -300,6 +317,7 @@ def main():
 	window.bind("<Return>",lambda x: confirm())
 	# make it so that the content can be cleared by pressing escape
 	window.bind("<Escape>",lambda x: reset(output_field,text_input,output_label))
+	#window.bind("<Control-^>",lambda x: choose_options())
 	
 	# loop the program while the window is open
 	window.mainloop()
