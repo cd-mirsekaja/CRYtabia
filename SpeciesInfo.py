@@ -10,17 +10,19 @@ Comments are always above the commented line.
 
 """
 
+# import required packages
 import pandas as pd
 import tkinter as tk
 import os
 
-
+# set script directory
 script_directory = os.path.dirname(os.path.abspath(__file__))
+# set reference table
 INPUT_TABLE = os.path.join(script_directory, "infolib.xlsx")
 
 # get specific columns containing either taxonomic info or habitat info from reference table
 TAXO_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="B:N")
-HABITAT_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="B,I:L")
+HABITAT_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="B,P:S")
 
 # function returns the accession numbers matched to a given scientific name
 def sciname_to_accnumber(table,sciName):
@@ -57,17 +59,34 @@ def get_info_by_accnumber(table,ac_number):
 		
 		return species_str,authority_str,taxpath_str,taxgroup_str,engName_str,gerName_str
 	else:
-		return "","","",""
+		return "","","","","",""
 
+# function for matching a given taxon group with the reference table and returning the species belonging to that taxon
 def get_info_by_taxon_group(table,taxGroup):
-	matched_lines=table[table[table.columns[3]] == taxGroup].index.tolist()
+	matched_lines_3=table[table[table.columns[3]] == taxGroup].index.tolist()
+	if matched_lines_3!=[]: matched_title=table.columns[3]
+	matched_lines_6=table[table[table.columns[6]] == taxGroup].index.tolist()
+	if matched_lines_6!=[]: matched_title=table.columns[6]
+	matched_lines_7=table[table[table.columns[7]] == taxGroup].index.tolist()
+	if matched_lines_7!=[]: matched_title=table.columns[7]
+	matched_lines_8=table[table[table.columns[8]] == taxGroup].index.tolist()
+	if matched_lines_8!=[]: matched_title=table.columns[8]
+	matched_lines_9=table[table[table.columns[9]] == taxGroup].index.tolist()
+	if matched_lines_9!=[]: matched_title=table.columns[9]
+	matched_lines_10=table[table[table.columns[10]] == taxGroup].index.tolist()
+	if matched_lines_10!=[]: matched_title=table.columns[10]
+	matched_lines_11=table[table[table.columns[11]] == taxGroup].index.tolist()
+	if matched_lines_11!=[]: matched_title=table.columns[11]
+
+	matched_lines = matched_lines_3+matched_lines_6+matched_lines_7+matched_lines_8+matched_lines_9+matched_lines_10+matched_lines_11
 	
 	if matched_lines!=[]:
 		sciNames=table.iloc[matched_lines,1].values.tolist()
+		sciNames = list(set(sciNames))
 		
-		return sciNames
+		return sciNames,matched_title
 	else:
-		return ""
+		return [],""
 
 # function for matching a given accession number with the reference table and returning extracted habitat information
 def get_habitat_by_accnumber(table,ac_number):
@@ -99,7 +118,6 @@ def get_habitat_by_accnumber(table,ac_number):
 		
 	return out_string
 
-
 # function for choosing the input method and the input
 def choose_input(selectorframe):
 	
@@ -123,11 +141,19 @@ def choose_input(selectorframe):
 	option3=tk.Radiobutton(selectorframe,text="Taxon Group",variable=selector,value="Taxon Group",command=lambda:clicked())
 	option3.grid(row=3,column=0,padx=20,sticky="nw")
 	
+	# possible option menu instead of radiobuttons
+	#options=["Accession Number","Scientific Name","Taxon Group"]
+	#optionmenu=tk.OptionMenu(selectorframe, selector, *options,command=lambda:clicked())
+	#optionmenu.grid(row=3,column=1,sticky="nw",pady=5)
+	
+	
 	return selector
 
 
 # function for putting search results into the text field
 def text_box(selection,query,output_field,output_label):
+	sciName=""
+	sciNames=[]
 	# function for changing the output sentence on vernaculars depending on which are available
 	def vernacular_text(engName,gerName):
 		if engName=="nan" and gerName=="nan":
@@ -142,20 +168,20 @@ def text_box(selection,query,output_field,output_label):
 		return text_out
 	
 	# check for input of radio buttons
-	if selection.get()=="Accession Number":
+	if selection.get()=="Accession Number" and query.get()!="":
 		sciName,authority,taxPath,taxGroup,engName,gerName=get_info_by_accnumber(TAXO_LIBRARY,query.get())
 		habitats=get_habitat_by_accnumber(HABITAT_LIBRARY, query.get())
 		
 		vern_text=vernacular_text(engName, gerName)
 		success_text=[
-			f"\n{sciName} {authority} belongs to the {taxGroup}.",
+			f"\n{sciName} {authority} belongs to the {taxGroup}.\n",
 			vern_text+"\n",
 			f"\nThe Species is known to live in {habitats} habitats."+"\n"+"\n",
 			f"Taxonomic Path: {taxPath}\n",
 			"\n---------------------------------------------------"+"\n"
 			]
 		
-	elif selection.get()=="Scientific Name":
+	elif selection.get()=="Scientific Name" and query.get()!="":
 		acc_number,acc_list=sciname_to_accnumber(TAXO_LIBRARY, query.get())
 		sciName,authority,taxPath,taxGroup,engName,gerName=get_info_by_accnumber(TAXO_LIBRARY,acc_number)
 		habitats=get_habitat_by_accnumber(HABITAT_LIBRARY, acc_number)
@@ -170,34 +196,36 @@ def text_box(selection,query,output_field,output_label):
 			"\n---------------------------------------------------"+"\n"
 			]
 	
-	elif selection.get()=="Taxon Group":
-		sciName=get_info_by_taxon_group(TAXO_LIBRARY,query.get())
-		speciescount=len(sciName)
+	elif selection.get()=="Taxon Group" and query.get()!="":
+		sciNames,col_title=get_info_by_taxon_group(TAXO_LIBRARY,query.get())
+		speciescount=len(sciNames)
 		success_text=[
-			f"{speciescount} Species belonging to taxon group {query.get()}:\n",
-			f"{', '.join(sciName)}\n",
+			f"\n{speciescount} Species belonging to {col_title} {query.get()}:\n",
+			f"{', '.join(sciNames)}\n",
 			"\n---------------------------------------------------"+"\n"
 			]
-	
+	# set text for when nothing was found
 	fail_text=[
 		f"\n{selection.get()} {query.get()} was not found in Table.\nPlease enter something else.\n",
 		"\n---------------------------------------------------"+"\n"
 		]
-	
+	# set text for when no input was given
 	none_text=[
 		"\nPlease enter something.\n"
 		"\n---------------------------------------------------"+"\n"
 		]
 	
+	print(sciName)
 	# check if an input was given
 	if query.get()=="":
+		output_label.config(text=f"No {selection.get()} given")
 		output_field.insert(1.0,''.join(none_text))
 	# check if something was found in the table
-	elif sciName!="":
+	elif sciName!="" or sciNames!=[]:
 		output_label.config(text=f"Available information on {query.get()}:")
 		output_field.insert(1.0,''.join(success_text))
 	# check if nothing was found in the table
-	elif sciName=="":
+	elif sciName=="" or sciNames==[]:
 		output_label.config(text=f"No information available for {query.get()}")
 		output_field.insert(1.0,''.join(fail_text))
 
@@ -208,7 +236,7 @@ def reset(output_field,text_input,output_label):
 	output_field.delete(1.0,tk.END)
 	output_field.config(state="disabled")
 	text_input.delete(0,tk.END)
-	output_label.config(text="Requested Information will show up below.")
+	output_label.config(text="Requested Information will show up below")
 
 # main function
 def main():
@@ -225,13 +253,12 @@ def main():
 	selectorframe=tk.Frame(window)
 	selectorframe.columnconfigure(0,weight=1)
 	selectorframe.columnconfigure(1,weight=1)
-	
-	# render the frame inside the main window
 	selectorframe.pack()
 	
 	# input field for text
 	text_input=tk.Entry(selectorframe)
 	text_input.grid(row=1,column=1)
+	
 	
 	# make the selection und get the data from there
 	selector=choose_input(selectorframe)
@@ -241,15 +268,15 @@ def main():
 	query=tk.StringVar()
 	
 	# frame for output
-	outputframe=tk.Frame(window,borderwidth=10)
+	outputframe=tk.Frame(window)
 	outputframe.columnconfigure(0,weight=1)
 	outputframe.pack(pady=20,padx=20)
 	
 	# text field
-	output_field=tk.Text(outputframe,width=400,height=40,state="disabled")
+	output_field=tk.Text(outputframe,width=400,height=35,state="disabled",border=2,relief="solid")
 	
 	# text field label
-	output_label=tk.Label(outputframe,text="Requested Information will show up below.",font="Arial 14")
+	output_label=tk.Label(outputframe,text="Requested Information will show up below",font="Arial 14")
 	output_label.grid(row=0,column=0,sticky="s")
 	
 	# confirm button
@@ -271,6 +298,7 @@ def main():
 	
 	# make it so the input can be cofirmed by pressing return
 	window.bind("<Return>",lambda x: confirm())
+	# make it so that the content can be cleared by pressing escape
 	window.bind("<Escape>",lambda x: reset(output_field,text_input,output_label))
 	
 	# loop the program while the window is open
