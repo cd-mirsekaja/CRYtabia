@@ -33,7 +33,7 @@ def sciname_to_accnumber(table,sciName):
 		return "",""
 
 # function for matching a given accession number with the reference table and returning extracted taxonomic information
-def find_taxinfo(table,ac_number):
+def get_info_by_accnumber(table,ac_number):
 	# search for accession number in table
 	matched_lines = table[table[table.columns[0]] == ac_number].index.tolist()
 	
@@ -59,9 +59,18 @@ def find_taxinfo(table,ac_number):
 	else:
 		return "","","",""
 
+def get_info_by_taxon_group(table,taxGroup):
+	matched_lines=table[table[table.columns[3]] == taxGroup].index.tolist()
+	
+	if matched_lines!=[]:
+		sciNames=table.iloc[matched_lines,1].values.tolist()
+		
+		return sciNames
+	else:
+		return ""
 
 # function for matching a given accession number with the reference table and returning extracted habitat information
-def find_habitat(table,ac_number):
+def get_habitat_by_accnumber(table,ac_number):
 	# search for accession number in table
 	matched_lines = table[table[table.columns[0]] == ac_number].index.tolist()
 	out_list=[]
@@ -95,7 +104,7 @@ def find_habitat(table,ac_number):
 def choose_input(selectorframe):
 	
 	# input choosing label
-	tk.Label(selectorframe,text="Choose Input Method",font="Arial 14").grid(row=0,column=0)
+	tk.Label(selectorframe,text="Search Library by",font="Arial 14").grid(row=0,column=0,padx=20,sticky="nw")
 	
 	# radiobuttons
 	selector=tk.StringVar()
@@ -111,9 +120,8 @@ def choose_input(selectorframe):
 	option1.grid(row=1,column=0,padx=20,sticky="nw")
 	option2=tk.Radiobutton(selectorframe,text="Scientific Name",variable=selector,value="Scientific Name",command=lambda:clicked())
 	option2.grid(row=2,column=0,padx=20,sticky="nw")
-	
-	
-	
+	option3=tk.Radiobutton(selectorframe,text="Taxon Group",variable=selector,value="Taxon Group",command=lambda:clicked())
+	option3.grid(row=3,column=0,padx=20,sticky="nw")
 	
 	return selector
 
@@ -135,8 +143,8 @@ def text_box(selection,query,output_field,output_label):
 	
 	# check for input of radio buttons
 	if selection.get()=="Accession Number":
-		sciName,authority,taxPath,taxGroup,engName,gerName=find_taxinfo(TAXO_LIBRARY,query.get())
-		habitats=find_habitat(HABITAT_LIBRARY, query.get())
+		sciName,authority,taxPath,taxGroup,engName,gerName=get_info_by_accnumber(TAXO_LIBRARY,query.get())
+		habitats=get_habitat_by_accnumber(HABITAT_LIBRARY, query.get())
 		
 		vern_text=vernacular_text(engName, gerName)
 		success_text=[
@@ -150,8 +158,8 @@ def text_box(selection,query,output_field,output_label):
 		
 	elif selection.get()=="Scientific Name":
 		acc_number,acc_list=sciname_to_accnumber(TAXO_LIBRARY, query.get())
-		sciName,authority,taxPath,taxGroup,engName,gerName=find_taxinfo(TAXO_LIBRARY,acc_number)
-		habitats=find_habitat(HABITAT_LIBRARY, acc_number)
+		sciName,authority,taxPath,taxGroup,engName,gerName=get_info_by_accnumber(TAXO_LIBRARY,acc_number)
+		habitats=get_habitat_by_accnumber(HABITAT_LIBRARY, acc_number)
 		
 		vern_text=vernacular_text(engName, gerName)
 		success_text=[
@@ -161,6 +169,15 @@ def text_box(selection,query,output_field,output_label):
 			f"Available Accession Numbers are {', '.join(acc_list)}\n\n",
 			"Taxonomic Information: ",
 			taxPath+"\n",
+			"\n---------------------------------------------------"+"\n"
+			]
+	
+	elif selection.get()=="Taxon Group":
+		sciName=get_info_by_taxon_group(TAXO_LIBRARY,query.get())
+		speciescount=len(sciName)
+		success_text=[
+			f"{speciescount} Species belonging to taxon group {query.get()}:\n",
+			f"{', '.join(sciName)}\n",
 			"\n---------------------------------------------------"+"\n"
 			]
 	
