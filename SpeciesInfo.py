@@ -21,12 +21,12 @@ script_directory = os.path.dirname(os.path.abspath(__file__))
 INPUT_TABLE = os.path.join(script_directory, "infolib.xlsx")
 
 # get specific columns containing either taxonomic info or habitat info from reference table
-TAXO_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="B:N")
+TAXO_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="B:O")
 HABITAT_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="B,P:S")
 
 # function returns the accession numbers matched to a given scientific name
 def sciname_to_accnumber(table,sciName):
-	matched_lines = table[table[table.columns[1]] == sciName].index.tolist()
+	matched_lines = table[table[table.columns[9]] == sciName].index.tolist()
 	if matched_lines!=[]:
 		acc_values=table.iloc[matched_lines,0].values.tolist()
 		acc_out=''.join(map(str, acc_values[0]))
@@ -41,12 +41,12 @@ def get_info_by_accnumber(table,ac_number):
 	
 	if matched_lines!=[]:
 		# save the species and taxon group to list variables
-		species_values = table.iloc[matched_lines,1].values
-		authority_values = table.iloc[matched_lines,2].values
-		taxgroup_values = table.iloc[matched_lines,3].values
-		engName_values = table.iloc[matched_lines,4].values
-		gerName_values = table.iloc[matched_lines,5].values
-		taxpath_values = table.iloc[matched_lines,6:12].values
+		species_values = table.iloc[matched_lines,9].values
+		authority_values = table.iloc[matched_lines,10].values
+		taxgroup_values = table.iloc[matched_lines,13].values
+		engName_values = table.iloc[matched_lines,11].values
+		gerName_values = table.iloc[matched_lines,12].values
+		taxpath_values = table.iloc[matched_lines,1:7].values
 		
 		# join the individual list elements into strings
 		species_str = ''.join(map(str, species_values))
@@ -63,25 +63,25 @@ def get_info_by_accnumber(table,ac_number):
 
 # function for matching a given taxon group with the reference table and returning the species belonging to that taxon
 def get_info_by_taxon_group(table,taxGroup):
-	matched_lines_3=table[table[table.columns[3]] == taxGroup].index.tolist()
-	if matched_lines_3!=[]: matched_title=table.columns[3]
-	matched_lines_6=table[table[table.columns[6]] == taxGroup].index.tolist()
-	if matched_lines_6!=[]: matched_title=table.columns[6]
-	matched_lines_7=table[table[table.columns[7]] == taxGroup].index.tolist()
-	if matched_lines_7!=[]: matched_title=table.columns[7]
-	matched_lines_8=table[table[table.columns[8]] == taxGroup].index.tolist()
-	if matched_lines_8!=[]: matched_title=table.columns[8]
-	matched_lines_9=table[table[table.columns[9]] == taxGroup].index.tolist()
-	if matched_lines_9!=[]: matched_title=table.columns[9]
-	matched_lines_10=table[table[table.columns[10]] == taxGroup].index.tolist()
-	if matched_lines_10!=[]: matched_title=table.columns[10]
-	matched_lines_11=table[table[table.columns[11]] == taxGroup].index.tolist()
-	if matched_lines_11!=[]: matched_title=table.columns[11]
+	matched_lines_taxgroup=table[table[table.columns[13]] == taxGroup].index.tolist()
+	if matched_lines_taxgroup!=[]: matched_title=table.columns[3]
+	matched_lines_kingdom=table[table[table.columns[1]] == taxGroup].index.tolist()
+	if matched_lines_kingdom!=[]: matched_title=table.columns[1]
+	matched_lines_phylum=table[table[table.columns[2]] == taxGroup].index.tolist()
+	if matched_lines_phylum!=[]: matched_title=table.columns[2]
+	matched_lines_class=table[table[table.columns[3]] == taxGroup].index.tolist()
+	if matched_lines_class!=[]: matched_title=table.columns[3]
+	matched_lines_order=table[table[table.columns[4]] == taxGroup].index.tolist()
+	if matched_lines_order!=[]: matched_title=table.columns[4]
+	matched_lines_family=table[table[table.columns[5]] == taxGroup].index.tolist()
+	if matched_lines_family!=[]: matched_title=table.columns[5]
+	matched_lines_genus=table[table[table.columns[6]] == taxGroup].index.tolist()
+	if matched_lines_genus!=[]: matched_title=table.columns[6]
 
-	matched_lines = matched_lines_3+matched_lines_6+matched_lines_7+matched_lines_8+matched_lines_9+matched_lines_10+matched_lines_11
+	matched_lines = matched_lines_taxgroup+matched_lines_kingdom+matched_lines_phylum+matched_lines_class+matched_lines_order+matched_lines_family+matched_lines_genus
 	
 	if matched_lines!=[]:
-		sciNames=table.iloc[matched_lines,1].values.tolist()
+		sciNames=table.iloc[matched_lines,9].values.tolist()
 		sciNames = list(set(sciNames))
 		
 		return sciNames,matched_title
@@ -145,8 +145,7 @@ def choose_input(selectorframe):
 	#options=["Accession Number","Scientific Name","Taxon Group"]
 	#optionmenu=tk.OptionMenu(selectorframe, selector, *options,command=lambda:clicked())
 	#optionmenu.grid(row=3,column=1,sticky="nw",pady=5)
-	
-	
+
 	return selector
 
 
@@ -177,7 +176,8 @@ def text_box(selection,query,output_field,output_label):
 			f"\n{sciName} {authority} belongs to the {taxGroup}.\n",
 			vern_text+"\n",
 			f"\nThe Species is known to live in {habitats} habitats."+"\n"+"\n",
-			f"Taxonomic Path: {taxPath}\n",
+			"Taxonomic Path as kingdom > phylum > class > order > family > genus:\n",
+			f"{taxPath}\n",
 			"\n---------------------------------------------------"+"\n"
 			]
 		
@@ -192,7 +192,8 @@ def text_box(selection,query,output_field,output_label):
 			vern_text+"\n",
 			f"\nThe Species is known to live in {habitats} habitats.\n\n",
 			f"Available Accession Numbers are {', '.join(acc_list)}\n\n",
-			f"Taxonomic Path: {taxPath}\n",
+			"Taxonomic Path as kingdom > phylum > class > order > family > genus:\n",
+			f"{taxPath}\n",
 			"\n---------------------------------------------------"+"\n"
 			]
 	
@@ -215,7 +216,6 @@ def text_box(selection,query,output_field,output_label):
 		"\n---------------------------------------------------"+"\n"
 		]
 	
-	print(sciName)
 	# check if an input was given
 	if query.get()=="":
 		output_label.config(text=f"No {selection.get()} given")
@@ -243,7 +243,7 @@ def main():
 	# make root window
 	window=tk.Tk()
 	window.title("Species Information Extractor v2")
-	window.geometry("1280x720")
+	window.geometry("1510x920")
 	
 	# lable for title
 	title_label=tk.Label(window,text="Species Information Extractor v2",font="Arial 18 bold")
@@ -273,7 +273,7 @@ def main():
 	outputframe.pack(pady=20,padx=20)
 	
 	# text field
-	output_field=tk.Text(outputframe,width=400,height=35,state="disabled",border=2,relief="solid")
+	output_field=tk.Text(outputframe,width=400,height=44,state="disabled",border=2,relief="solid",font="Arial 13")
 	
 	# text field label
 	output_label=tk.Label(outputframe,text="Requested Information will show up below",font="Arial 14")
