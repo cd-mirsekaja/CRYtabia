@@ -137,11 +137,11 @@ def choose_input(selectorframe):
 		chooselabel.config(text=f"Input {selector.get()}")
 	
 	# set radiobuttons and render them into the selection grid
-	option1=tk.Radiobutton(selectorframe,text="Accession Number",variable=selector,value="Accession Number",command=lambda:clicked())
+	option1=tk.Radiobutton(selectorframe,text="Accession Number",variable=selector,value="Accession Number",cursor="circle",command=lambda:clicked())
 	option1.grid(row=1,column=0,padx=20,sticky="nw")
-	option2=tk.Radiobutton(selectorframe,text="Scientific Name",variable=selector,value="Scientific Name",command=lambda:clicked())
+	option2=tk.Radiobutton(selectorframe,text="Scientific Name",variable=selector,value="Scientific Name",cursor="circle",command=lambda:clicked())
 	option2.grid(row=2,column=0,padx=20,sticky="nw")
-	option3=tk.Radiobutton(selectorframe,text="Taxon Group",variable=selector,value="Taxon Group",command=lambda:clicked())
+	option3=tk.Radiobutton(selectorframe,text="Taxon Group",variable=selector,value="Taxon Group",cursor="circle",command=lambda:clicked())
 	option3.grid(row=3,column=0,padx=20,sticky="nw")
 	
 	# functions for binding keyboard shortcuts
@@ -290,7 +290,7 @@ def main():
 	outputframe.pack(pady=20,padx=20)
 	
 	# text field
-	output_field=tk.Text(outputframe,width=400,height=44,state="disabled",border=2,relief="solid",font="Arial 13")
+	output_field=tk.Text(outputframe,width=400,height=44,state="disabled",border=2,relief="solid",font="Arial 13",cursor="cross")
 	
 	# text field label
 	output_label=tk.Label(outputframe,text="Requested Information will show up below",font="Arial 14")
