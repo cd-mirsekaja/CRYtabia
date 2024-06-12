@@ -6,18 +6,15 @@ Usage:
 """
 
 from setuptools import setup
-import os
 
 APP = ['SpeciesInfo.py']
 DATA_FILES = [
 	'infolib.xlsx',
-	('gooey/languages', [os.path.join('/opt/anaconda3/lib/python3.11/site-packages/gooey/languages', f) for f in os.listdir('/opt/anaconda3/lib/python3.11/site-packages/gooey/languages')]),
-	('gooey/images', [os.path.join('/opt/anaconda3/lib/python3.11/site-packages/gooey/images', f) for f in os.listdir('/opt/anaconda3/lib/python3.11/site-packages/gooey/images')]),
 ]
 OPTIONS = {
 	"iconfile": "images/icon.icns",
 	'argv_emulation': True,
-	"packages": ['pandas','gooey']}
+	"packages": ['pandas']}
 
 setup(
     app=APP,
