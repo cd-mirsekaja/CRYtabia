@@ -14,8 +14,7 @@ Comments are always above the commented line.
 import pandas as pd
 import tkinter as tk
 import os
-from pygbif import species as sp
-from pygbif import maps
+
 
 # set script directory
 script_directory = os.path.dirname(os.path.abspath(__file__))
@@ -123,17 +122,15 @@ def get_habitat_by_accnumber(table,ac_number):
 
 class SearchGBIF:
 	def __init__(self,sciName,):
+		from pygbif import species as sp
 		self.sciName=sciName
 		self.backbone=sp.name_backbone(sciName)
 		self.lookup=sp.name_lookup(sciName,limit=1)
 		self.lookup_results=self.lookup['results'][0]
-		self.taxkey=self.backbone['usageKey']
+		if 'usageKey' in self.backbone:
+			self.taxkey=self.backbone['usageKey']
 	
-
-	#print(backbone,"\n")
-	#print(lookup,"\n")
-	
-	def get_taxpath(self):
+	def getTaxpath(self):
 		lkingdom,lphylum,lclass,lorder,lfamily,lgenus="","","","","",""
 		tkingdom,tphylum,tclass,torder,tfamily,tgenus="","","","","",""
 		
@@ -157,18 +154,24 @@ class SearchGBIF:
 			tgenus=" > "+self.backbone['genus']
 		if 'scientificName' in self.backbone:
 			tsciName=self.backbone['scientificName']
+		else:
+			tsciName="not available."
 		
-		taxGuide=(lkingdom+lphylum+lclass+lorder+lfamily+lgenus)
-		taxPath=tkingdom+tphylum+tclass+torder+tfamily+tgenus
-		
+		if lkingdom!="":
+			taxGuide=("as "+lkingdom+lphylum+lclass+lorder+lfamily+lgenus)
+			taxPath=tkingdom+tphylum+tclass+torder+tfamily+tgenus
+		else:
+			taxGuide="not available."
+			taxPath=""
 		out_list=[
-			f"Full name: {tsciName}\n"
-			f"Taxonomic path as {taxGuide}\n",
+			f"Full name {tsciName}\n"
+			f"Taxonomic path {taxGuide}\n",
 			f"{taxPath}"
 			]
 		return ''.join(out_list)
 	
-	def make_map(self):
+	def makeMap(self):
+		from pygbif import maps
 		outmap=maps.map(taxonKey=self.taxkey,source="density",bin="hex",style="purpleYellow.poly",format="@2x.png")
 		outmap.response
 		outmap.path
@@ -178,7 +181,7 @@ class SearchGBIF:
 
 
 # function for choosing the input method and the input
-def choose_input(selectorframe):
+def getInput(selectorframe):
 	
 	# input choosing label
 	tk.Label(selectorframe,text="Search Library by",font="Arial 14").grid(row=0,column=0,padx=20,sticky="nw")
@@ -196,18 +199,18 @@ def choose_input(selectorframe):
 		chooselabel.config(text=f"Input {selector.get()}")
 	
 	# set radiobuttons and render them into the selection grid
-	option1=tk.Radiobutton(selectorframe,text="Accession Number",variable=selector,value="Accession Number",cursor="circle",command=lambda:clicked())
-	option1.grid(row=1,column=0,padx=20,sticky="nw")
-	option2=tk.Radiobutton(selectorframe,text="Scientific Name",variable=selector,value="Scientific Name",cursor="circle",command=lambda:clicked())
-	option2.grid(row=2,column=0,padx=20,sticky="nw")
-	option3=tk.Radiobutton(selectorframe,text="Taxon Group",variable=selector,value="Taxon Group",cursor="circle",command=lambda:clicked())
-	option3.grid(row=3,column=0,padx=20,sticky="nw")
+	option_accNumber=tk.Radiobutton(selectorframe,text="Accession Number",variable=selector,value="Accession Number",cursor="circle",command=lambda:clicked())
+	option_accNumber.grid(row=1,column=0,padx=20,sticky="nw")
+	option_sciName=tk.Radiobutton(selectorframe,text="Scientific Name",variable=selector,value="Scientific Name",cursor="circle",command=lambda:clicked())
+	option_sciName.grid(row=2,column=0,padx=20,sticky="nw")
+	option_taxGroup=tk.Radiobutton(selectorframe,text="Taxon Group",variable=selector,value="Taxon Group",cursor="circle",command=lambda:clicked())
+	option_taxGroup.grid(row=3,column=0,padx=20,sticky="nw")
 	
 	# functions for binding keyboard shortcuts
-	def select_option1(event=None):
+	def select_option_accNumber(event=None):
 		selector.set("Accession Number")
 		clicked()
-	def select_option2(event=None):
+	def select_option_sciName(event=None):
 		selector.set("Scientific Name")
 		clicked()
 	def select_option3(event=None):
@@ -215,15 +218,15 @@ def choose_input(selectorframe):
 		clicked()
 	
 	# bind keyboard shortcuts for switching between radiobuttons
-	selectorframe.bind_all("<Command-Key-1>", select_option1)
-	selectorframe.bind_all("<Command-Key-2>", select_option2)
+	selectorframe.bind_all("<Command-Key-1>", select_option_accNumber)
+	selectorframe.bind_all("<Command-Key-2>", select_option_sciName)
 	selectorframe.bind_all("<Command-Key-3>", select_option3)
 	
 	return selector
 
 
 # function for putting search results into the text field
-def text_box(selection,query,output_field,output_label):
+def setText(selection,query,text_field,output_label,gbif_state):
 	sciName=""
 	sciNames=[]
 	# function for changing the output sentence on vernaculars depending on which are available
@@ -238,6 +241,14 @@ def text_box(selection,query,output_field,output_label):
 			text_out=f"The english vernacular is {engName}, the german vernacular is {gerName}."
 		
 		return text_out
+	
+	# if GBIF Search is enabled, output search results
+	if gbif_state==1:
+		gbif_search=SearchGBIF(query.get())
+		gbif_results=gbif_search.getTaxpath()
+		gbif_out=f"\nInformation from GBIF backbone:\n{gbif_results}\n"
+	elif gbif_state==0:
+		gbif_out=""
 	
 	# check for input of radio buttons
 	if selection.get()=="Accession Number" and query.get()!="":
@@ -274,14 +285,15 @@ def text_box(selection,query,output_field,output_label):
 				f"Available Accession Numbers are {', '.join(acc_list)}\n\n",
 				"Taxonomic Path as kingdom > phylum > class > order > family > genus:\n",
 				f"{taxPath}\n",
+				f"{gbif_out}",
 				"\n---------------------------------------------------"+"\n"
 				]
 		else:
 			search=SearchGBIF(query.get())
-			taxPath=search.get_taxpath()
+			taxPath=search.getTaxpath()
 			main_text=[
-				f"\nScientific Name {query.get()} was not found in Table.\nInformation from GBIF backbone:\n\n",
-				f"{taxPath}\n"
+				f"\nScientific Name {query.get()} was not found in Table.\n",
+				f"{gbif_out}",
 				"\n---------------------------------------------------"+"\n"
 				]
 	
@@ -291,16 +303,15 @@ def text_box(selection,query,output_field,output_label):
 		
 		if sciNames!=[]:
 			main_text=[
-				f"\n{speciescount} Species belonging to {col_title} {query.get()}:\n",
+				f"\n{speciescount} Species found in table belonging to {col_title} {query.get()}:\n",
 				f"{', '.join(sciNames)}\n",
+				f"{gbif_out}",
 				"\n---------------------------------------------------"+"\n"
 				]
 		else:
-			search=SearchGBIF(query.get())
-			taxPath=search.get_taxpath()
 			main_text=[
-				f"\nTaxon Group {query.get()} was not found in Table.\nGeneral Information from GBIF backbone:\n\n",
-				f"{taxPath}\n"
+				f"\nTaxon Group {query.get()} was not found in Table.\n",
+				f"{gbif_out}",
 				"\n---------------------------------------------------"+"\n"
 				]
 	# set text for when nothing was found
@@ -314,38 +325,55 @@ def text_box(selection,query,output_field,output_label):
 	# check if an input was given
 	if query.get()=="":
 		output_label.config(text=f"No {selection.get()} given")
-		output_field.insert(1.0,''.join(none_text))
+		text_field.insert(1.0,''.join(none_text))
 	else:
 		output_label.config(text=f"Available information on {query.get()}:")
-		output_field.insert(1.0,''.join(main_text))
-
-
-def choose_options(selector):
-	print("It worked!")
+		text_field.insert(1.0,''.join(main_text))
 
 # function for clearing out the text and input fields
-def reset(output_field,text_input,output_label):
-	output_field.config(state="normal")
-	output_field.delete(1.0,tk.END)
-	output_field.config(state="disabled")
+def reset(text_field,text_input,output_label):
+	text_field.config(state="normal")
+	text_field.delete(1.0,tk.END)
+	text_field.config(state="disabled")
 	text_input.delete(0,tk.END)
 	output_label.config(text="Requested Information will show up below")
 
+def optionsMenu(selectorframe):
+	# title of column
+	tk.Label(selectorframe,text="Other Options",font="Arial 14").grid(row=0,column=3,padx=20,sticky="nw")
+	
+	# checkbox for enabling GBIF search
+	gbif_onoff=tk.IntVar()
+	enable_gbif=tk.Checkbutton(selectorframe,text='Search GBIF Backbone',variable=gbif_onoff, onvalue=1, offvalue=0)
+	enable_gbif.grid(row=1,column=3,padx=20,sticky="nw")
+	
+	# checkbox for enabling map generation
+	maps_onoff=tk.IntVar()
+	enable_maps=tk.Checkbutton(selectorframe,text="Generate Map (WIP)",variable=maps_onoff, onvalue=1, offvalue=0)
+	#enable_maps.grid(row=2,column=3,padx=20,sticky="nw")
+	
+	return gbif_onoff,maps_onoff
+	
+
 # main function
 def main():
+	# set name of the program
+	program_title="Species Information Extractor v3"
+	
 	# make root window
 	window=tk.Tk()
-	window.title("Species Information Extractor v2")
+	window.title(program_title)
 	window.geometry("1510x920")
 	
 	# lable for title
-	title_label=tk.Label(window,text="Species Information Extractor v2",font="Arial 18 bold")
+	title_label=tk.Label(window,text=program_title,font="Arial 18 bold")
 	title_label.pack(padx=20,pady=20)
 	
 	# frame for selection and input
 	selectorframe=tk.Frame(window)
 	selectorframe.columnconfigure(0,weight=1)
-	selectorframe.columnconfigure(1,weight=1)
+	selectorframe.columnconfigure(1,weight=2)
+	selectorframe.columnconfigure(2,weight=1)
 	selectorframe.pack()
 	
 	# input field for text
@@ -354,7 +382,7 @@ def main():
 	
 	
 	# make the selection und get the data from there
-	selector=choose_input(selectorframe)
+	selector=getInput(selectorframe)
 	
 	# make empty tkinter variables to later store the selection
 	selection=tk.StringVar()
@@ -362,11 +390,15 @@ def main():
 	
 	# frame for output
 	outputframe=tk.Frame(window)
-	outputframe.columnconfigure(0,weight=1)
+	outputframe.columnconfigure(0,weight=2)
+	outputframe.columnconfigure(1,weight=1)
 	outputframe.pack(pady=20,padx=20)
 	
+	# get the output of the checkboxes
+	gbif_onoff,maps_onoff=optionsMenu(selectorframe)
+	
 	# text field
-	output_field=tk.Text(outputframe,width=400,height=44,state="disabled",border=2,relief="solid",font="Arial 13",cursor="cross")
+	text_field=tk.Text(outputframe,width=400,height=44,state="disabled",border=2,relief="solid",font="Arial 13",cursor="cross")
 	
 	# text field label
 	output_label=tk.Label(outputframe,text="Requested Information will show up below",font="Arial 14")
@@ -376,24 +408,24 @@ def main():
 	tk.Button(selectorframe,text="confirm",command=lambda: confirm()).grid(row=2,column=1,sticky="nw")
 	
 	# save button
-	tk.Button(selectorframe,text="clear",command=lambda: reset(output_field,text_input,output_label)).grid(row=2, column=1,sticky="ne")
+	tk.Button(selectorframe,text="clear",command=lambda: reset(text_field,text_input,output_label)).grid(row=2, column=1,sticky="ne")
 	
 	# function to get currently entered values and print the search results in the text box
 	def confirm():
-		output_field.config(state="normal")
+		text_field.config(state="normal")
 		selection.set(selector.get()[:])
 		query.set(text_input.get()[:])
-		text_box(selection, query, output_field, output_label)
-		output_field.config(state="disabled")
+		gbif_state=gbif_onoff.get()
+		setText(selection, query, text_field, output_label,gbif_state)
+		text_field.config(state="disabled")
 	
 	# render the output field inside the window
-	output_field.grid(row=1,column=0)
+	text_field.grid(row=1,column=0)
 	
 	# make it so the input can be cofirmed by pressing return
 	window.bind("<Return>",lambda x: confirm())
 	# make it so that the content can be cleared by pressing escape
-	window.bind("<Escape>",lambda x: reset(output_field,text_input,output_label))
-	#window.bind("<Control-^>",lambda x: choose_options())
+	window.bind("<Escape>",lambda x: reset(text_field,text_input,output_label))
 	
 	# loop the main function while the window is open
 	window.mainloop()
