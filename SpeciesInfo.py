@@ -94,7 +94,7 @@ def get_habitat_by_accnumber(table,ac_number):
 	# search for accession number in table
 	matched_lines = table[table[table.columns[0]] == ac_number].index.tolist()
 	out_list=[]
-	
+
 	# check if habitat is marine
 	if table.iloc[matched_lines,1].values.size>0:
 		out_list.append("marine")
@@ -120,6 +120,7 @@ def get_habitat_by_accnumber(table,ac_number):
 	return out_string
 
 
+# class for searching the GBIF Database
 class SearchGBIF:
 	def __init__(self,sciName,):
 		from pygbif import species as sp
@@ -128,7 +129,7 @@ class SearchGBIF:
 		#self.lookup=sp.name_lookup(sciName,limit=1)
 		#self.lookup_results=self.lookup['results'][0]
 		
-	
+	# function for retrieving the taxonomic path from GBIF
 	def getTaxpath(self):
 		lkingdom,lphylum,lclass,lorder,lfamily,lgenus="","","","","",""
 		tkingdom,tphylum,tclass,torder,tfamily,tgenus="","","","","",""
@@ -168,7 +169,8 @@ class SearchGBIF:
 			f"{taxPath}"
 			]
 		return ''.join(out_list)
-	
+
+	# function for generating a map png from the GBIF database
 	def makeMap(self):
 		from pygbif import maps
 		if 'usageKey' in self.backbone:
@@ -178,9 +180,6 @@ class SearchGBIF:
 			return map_path
 		else:
 			return ""
-		
-		
-
 
 
 # function for choosing the input method and the input
@@ -332,7 +331,7 @@ def setText(selection,query,text_field,output_label,gbif_state):
 		output_label.config(text=f"Available information on {query.get()}:")
 		text_field.insert(1.0,''.join(main_text))
 
-
+# function for generating a map png for the current taxon
 def generateMap(map_state,selection,query,text_field,mapframe,map_image,render_map,map_label):
 	if map_state==1 and selection.get()!="Accession Number":
 		search_map=SearchGBIF(query.get())
@@ -350,8 +349,8 @@ def generateMap(map_state,selection,query,text_field,mapframe,map_image,render_m
 		text_field.config(width=200)
 		mapframe.config(width=0)
 
-
-def optionsMenu(selectorframe,outputframe):
+#function for the checkbuttons in the Options column
+def optionsMenu(selectorframe):
 	# title of column
 	tk.Label(selectorframe,text="Other Options",font="Arial 14").grid(row=0,column=3,padx=20,sticky="nw")
 	
@@ -378,7 +377,7 @@ def reset(text_field,text_input,output_label,gbif_onoff,map_onoff,selector,choos
 	gbif_onoff.set(0)
 	map_onoff.set(0)
 	selector.set("Accession Number")
-	chooselabel.config(text="Accession Number")
+	chooselabel.config(text="Input Accession Number")
 
 
 # function for clearing out the text and input fields as well as checkboxes
@@ -440,28 +439,23 @@ def main():
 	mapframe=tk.Text(outputframe,width=0,height=0,state="disabled")
 	map_image=tk.PhotoImage()
 	render_map=tk.Label(mapframe)
-	
-	
+
 	# get the output of the checkboxes
-	gbif_onoff,map_onoff=optionsMenu(selectorframe,outputframe)
+	gbif_onoff,map_onoff=optionsMenu(selectorframe)
 	
 	# text field label
 	output_label=tk.Label(outputframe,text="Requested Information will show up below",font="Arial 14")
 	output_label.grid(row=0,column=0,sticky="s")
 	
 	# confirm button
-	tk.Button(selectorframe,text="confirm",command=lambda: confirm()).grid(row=2,column=1,sticky="nw")
-	
-		
+	tk.Button(selectorframe,text="confirm",command=lambda: confirm()).grid(row=2,column=1,sticky="wne")
+
 	# clear button
-	tk.Button(selectorframe,text="clear",command=lambda: clearText(text_field,text_input,output_label)).grid(row=2, column=1,sticky="n")
+	tk.Button(selectorframe,text="clear",command=lambda: clearText(text_field,text_input,output_label),width=11).grid(row=3, column=1,sticky="nw")
 	
 	# reset button
-	tk.Button(selectorframe,text="reset",command=lambda: reset(text_field,text_input,output_label,map_onoff,gbif_onoff,selector,chooselabel)).grid(row=2, column=1,sticky="ne")
-	
-	
+	tk.Button(selectorframe,text="reset",command=lambda: reset(text_field,text_input,output_label,map_onoff,gbif_onoff,selector,chooselabel),width=11).grid(row=3, column=1,sticky="ne")
 
-	
 	# function to get currently entered values and print the search results in the text box
 	def confirm():
 		selection.set(selector.get()[:])
