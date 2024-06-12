@@ -14,8 +14,6 @@ Comments are always above the commented line.
 import pandas as pd
 import tkinter as tk
 import os
-from pygbif import species as sp
-from pygbif import maps
 
 # set script directory
 script_directory = os.path.dirname(os.path.abspath(__file__))
@@ -120,63 +118,6 @@ def get_habitat_by_accnumber(table,ac_number):
 		
 	return out_string
 
-
-class SearchGBIF:
-	def __init__(self,sciName,):
-		self.sciName=sciName
-		self.backbone=sp.name_backbone(sciName)
-		self.lookup=sp.name_lookup(sciName,limit=1)
-		self.lookup_results=self.lookup['results'][0]
-		self.taxkey=self.backbone['usageKey']
-	
-
-	#print(backbone,"\n")
-	#print(lookup,"\n")
-	
-	def get_taxpath(self):
-		lkingdom,lphylum,lclass,lorder,lfamily,lgenus="","","","","",""
-		tkingdom,tphylum,tclass,torder,tfamily,tgenus="","","","","",""
-		
-		if 'kingdom' in self.backbone:
-			lkingdom="Kingdom"
-			tkingdom=self.backbone['kingdom']
-		if 'phylum' in self.backbone:
-			lphylum=" > Phylum"
-			tphylum=" > "+self.backbone['phylum']
-		if 'class' in self.backbone:
-			lclass=" > Class"
-			tclass=" > "+self.backbone['class']
-		if 'order' in self.backbone:
-			lorder=" > Order"
-			torder=" > "+self.backbone['order']
-		if 'family' in self.backbone:
-			lfamily=" > Family"
-			tfamily=" > "+self.backbone['family']
-		if 'genus' in self.backbone:
-			lgenus=" > Genus"
-			tgenus=" > "+self.backbone['genus']
-		if 'scientificName' in self.backbone:
-			tsciName=self.backbone['scientificName']
-		
-		taxGuide=(lkingdom+lphylum+lclass+lorder+lfamily+lgenus)
-		taxPath=tkingdom+tphylum+tclass+torder+tfamily+tgenus
-		
-		out_list=[
-			f"Full name: {tsciName}\n"
-			f"Taxonomic path as {taxGuide}\n",
-			f"{taxPath}"
-			]
-		return ''.join(out_list)
-	
-	def make_map(self):
-		outmap=maps.map(taxonKey=self.taxkey,source="density",bin="hex",style="purpleYellow.poly",format="@2x.png")
-		outmap.response
-		outmap.path
-		outmap.img
-		outmap.plot()
-
-
-
 # function for choosing the input method and the input
 def choose_input(selectorframe):
 	
@@ -244,67 +185,45 @@ def text_box(selection,query,output_field,output_label):
 		sciName,authority,taxPath,taxGroup,engName,gerName=get_info_by_accnumber(TAXO_LIBRARY,query.get())
 		habitats=get_habitat_by_accnumber(HABITAT_LIBRARY, query.get())
 		
-		if sciName!="":
-			vern_text=vernacular_text(engName, gerName)
-			main_text=[
-				f"\n{sciName} {authority} belongs to the {taxGroup}.\n",
-				vern_text+"\n",
-				f"\nThe Species is known to live in {habitats} habitats."+"\n"+"\n",
-				"Taxonomic Path as kingdom > phylum > class > order > family > genus:\n",
-				f"{taxPath}\n",
-				"\n---------------------------------------------------"+"\n"
-				]
-		else:
-			main_text=[
-				f"\nAccession Number {query.get()} was not found in Table.\n",
-				"\n---------------------------------------------------"+"\n"
-				]
+		vern_text=vernacular_text(engName, gerName)
+		success_text=[
+			f"\n{sciName} {authority} belongs to the {taxGroup}.\n",
+			vern_text+"\n",
+			f"\nThe Species is known to live in {habitats} habitats."+"\n"+"\n",
+			"Taxonomic Path as kingdom > phylum > class > order > family > genus:\n",
+			f"{taxPath}\n",
+			"\n---------------------------------------------------"+"\n"
+			]
 		
 	elif selection.get()=="Scientific Name" and query.get()!="":
 		acc_number,acc_list=sciname_to_accnumber(TAXO_LIBRARY, query.get())
 		sciName,authority,taxPath,taxGroup,engName,gerName=get_info_by_accnumber(TAXO_LIBRARY,acc_number)
 		habitats=get_habitat_by_accnumber(HABITAT_LIBRARY, acc_number)
 		
-		if sciName!="":
-			vern_text=vernacular_text(engName, gerName)
-			main_text=[
-				f"\n{sciName} {authority} belongs to the {taxGroup}.\n",
-				vern_text+"\n",
-				f"\nThe Species is known to live in {habitats} habitats."+"\n"+"\n",
-				f"Available Accession Numbers are {', '.join(acc_list)}\n\n",
-				"Taxonomic Path as kingdom > phylum > class > order > family > genus:\n",
-				f"{taxPath}\n",
-				"\n---------------------------------------------------"+"\n"
-				]
-		else:
-			search=SearchGBIF(query.get())
-			taxPath=search.get_taxpath()
-			main_text=[
-				f"\nScientific Name {query.get()} was not found in Table.\nInformation from GBIF backbone:\n\n",
-				f"{taxPath}\n"
-				"\n---------------------------------------------------"+"\n"
-				]
+		vern_text=vernacular_text(engName, gerName)
+		success_text=[
+			f"\n{sciName} {authority} belongs to the {taxGroup}.\n",
+			vern_text+"\n",
+			f"\nThe Species is known to live in {habitats} habitats.\n\n",
+			f"Available Accession Numbers are {', '.join(acc_list)}\n\n",
+			"Taxonomic Path as kingdom > phylum > class > order > family > genus:\n",
+			f"{taxPath}\n",
+			"\n---------------------------------------------------"+"\n"
+			]
 	
 	elif selection.get()=="Taxon Group" and query.get()!="":
 		sciNames,col_title=get_info_by_taxon_group(TAXO_LIBRARY,query.get())
 		speciescount=len(sciNames)
-		
-		if sciNames!=[]:
-			main_text=[
-				f"\n{speciescount} Species belonging to {col_title} {query.get()}:\n",
-				f"{', '.join(sciNames)}\n",
-				"\n---------------------------------------------------"+"\n"
-				]
-		else:
-			search=SearchGBIF(query.get())
-			taxPath=search.get_taxpath()
-			main_text=[
-				f"\nTaxon Group {query.get()} was not found in Table.\nGeneral Information from GBIF backbone:\n\n",
-				f"{taxPath}\n"
-				"\n---------------------------------------------------"+"\n"
-				]
+		success_text=[
+			f"\n{speciescount} Species belonging to {col_title} {query.get()}:\n",
+			f"{', '.join(sciNames)}\n",
+			"\n---------------------------------------------------"+"\n"
+			]
 	# set text for when nothing was found
-
+	fail_text=[
+		f"\n{selection.get()} {query.get()} was not found in Table.\nPlease enter something else.\n",
+		"\n---------------------------------------------------"+"\n"
+		]
 	# set text for when no input was given
 	none_text=[
 		"\nPlease enter something.\n"
@@ -315,9 +234,14 @@ def text_box(selection,query,output_field,output_label):
 	if query.get()=="":
 		output_label.config(text=f"No {selection.get()} given")
 		output_field.insert(1.0,''.join(none_text))
-	else:
+	# check if something was found in the table
+	elif sciName!="" or sciNames!=[]:
 		output_label.config(text=f"Available information on {query.get()}:")
-		output_field.insert(1.0,''.join(main_text))
+		output_field.insert(1.0,''.join(success_text))
+	# check if nothing was found in the table
+	elif sciName=="" or sciNames==[]:
+		output_label.config(text=f"No information available for {query.get()}")
+		output_field.insert(1.0,''.join(fail_text))
 
 
 def choose_options(selector):
