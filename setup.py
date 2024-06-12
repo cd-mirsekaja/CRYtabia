@@ -14,7 +14,7 @@ DATA_FILES = [
 OPTIONS = {
 	"iconfile": "images/icon.icns",
 	'argv_emulation': True,
-	"packages": ['pandas']}
+	"packages": ['pandas','pygbif']}
 
 setup(
     app=APP,

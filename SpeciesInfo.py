@@ -125,10 +125,9 @@ class SearchGBIF:
 		from pygbif import species as sp
 		self.sciName=sciName
 		self.backbone=sp.name_backbone(sciName)
-		self.lookup=sp.name_lookup(sciName,limit=1)
-		self.lookup_results=self.lookup['results'][0]
-		if 'usageKey' in self.backbone:
-			self.taxkey=self.backbone['usageKey']
+		#self.lookup=sp.name_lookup(sciName,limit=1)
+		#self.lookup_results=self.lookup['results'][0]
+		
 	
 	def getTaxpath(self):
 		lkingdom,lphylum,lclass,lorder,lfamily,lgenus="","","","","",""
@@ -172,16 +171,20 @@ class SearchGBIF:
 	
 	def makeMap(self):
 		from pygbif import maps
-		outmap=maps.map(taxonKey=self.taxkey,source="density",bin="hex",style="purpleYellow.poly",format="@2x.png")
-		outmap.response
-		outmap.path
-		outmap.img
-		outmap.plot()
+		if 'usageKey' in self.backbone:
+			taxkey=self.backbone['usageKey']
+			outmap=maps.map(taxonKey=taxkey,source="density",bin="hex",style="purpleYellow.poly")
+			map_path=outmap.path
+			return map_path
+		else:
+			return ""
+		
+		
 
 
 
 # function for choosing the input method and the input
-def getInput(selectorframe):
+def getInput(selectorframe,chooselabel):
 	
 	# input choosing label
 	tk.Label(selectorframe,text="Search Library by",font="Arial 14").grid(row=0,column=0,padx=20,sticky="nw")
@@ -191,7 +194,7 @@ def getInput(selectorframe):
 	selector.set("Accession Number")
 	
 	# set label for above the input box
-	chooselabel=tk.Label(selectorframe,text=f"Input {selector.get()}",font="Arial 14")
+	chooselabel.config(text=f"Input {selector.get()}",font="Arial 14")
 	chooselabel.grid(row=0,column=1,sticky="nw")
 	
 	# function for when the radiobuttons change
@@ -314,7 +317,6 @@ def setText(selection,query,text_field,output_label,gbif_state):
 				f"{gbif_out}",
 				"\n---------------------------------------------------"+"\n"
 				]
-	# set text for when nothing was found
 
 	# set text for when no input was given
 	none_text=[
@@ -330,15 +332,26 @@ def setText(selection,query,text_field,output_label,gbif_state):
 		output_label.config(text=f"Available information on {query.get()}:")
 		text_field.insert(1.0,''.join(main_text))
 
-# function for clearing out the text and input fields
-def reset(text_field,text_input,output_label):
-	text_field.config(state="normal")
-	text_field.delete(1.0,tk.END)
-	text_field.config(state="disabled")
-	text_input.delete(0,tk.END)
-	output_label.config(text="Requested Information will show up below")
 
-def optionsMenu(selectorframe):
+def generateMap(map_state,selection,query,text_field,mapframe,map_image,render_map,map_label):
+	if map_state==1 and selection.get()!="Accession Number":
+		search_map=SearchGBIF(query.get())
+		map_path=search_map.makeMap()
+		if map_path!="":
+			text_field.config(width=125,height=44)
+			mapframe.config(width=100,height=44,padx=40,border=2,relief="solid")
+			map_label.config(text=f"Occurrence Map for {query.get()}:",font="Arial 14")
+			map_image.config(file=map_path)
+			render_map.config(image=map_image)
+		else:
+			text_field.insert(1.0,"No usage key available, map creation failed.")
+			return ""
+	else:
+		text_field.config(width=200)
+		mapframe.config(width=0)
+
+
+def optionsMenu(selectorframe,outputframe):
 	# title of column
 	tk.Label(selectorframe,text="Other Options",font="Arial 14").grid(row=0,column=3,padx=20,sticky="nw")
 	
@@ -348,12 +361,33 @@ def optionsMenu(selectorframe):
 	enable_gbif.grid(row=1,column=3,padx=20,sticky="nw")
 	
 	# checkbox for enabling map generation
-	maps_onoff=tk.IntVar()
-	enable_maps=tk.Checkbutton(selectorframe,text="Generate Map (WIP)",variable=maps_onoff, onvalue=1, offvalue=0)
-	#enable_maps.grid(row=2,column=3,padx=20,sticky="nw")
+	map_onoff=tk.IntVar()
+	enable_maps=tk.Checkbutton(selectorframe,text="Generate Map (WIP)",variable=map_onoff, onvalue=1, offvalue=0)
+	enable_maps.grid(row=2,column=3,padx=20,sticky="nw")
 	
-	return gbif_onoff,maps_onoff
-	
+	return gbif_onoff,map_onoff
+
+
+# function for resetting all inputs
+def reset(text_field,text_input,output_label,gbif_onoff,map_onoff,selector,chooselabel):
+	text_field.config(state="normal")
+	text_field.delete(1.0,tk.END)
+	text_field.config(state="disabled")
+	text_input.delete(0,tk.END)
+	output_label.config(text="Requested Information will show up below")
+	gbif_onoff.set(0)
+	map_onoff.set(0)
+	selector.set("Accession Number")
+	chooselabel.config(text="Accession Number")
+
+
+# function for clearing out the text and input fields as well as checkboxes
+def clearText(text_field,text_input,output_label):
+	text_field.config(state="normal")
+	text_field.delete(1.0,tk.END)
+	text_field.config(state="disabled")
+	text_input.delete(0,tk.END)
+	output_label.config(text="Requested Information will show up below")
 
 # main function
 def main():
@@ -375,14 +409,15 @@ def main():
 	selectorframe.columnconfigure(1,weight=2)
 	selectorframe.columnconfigure(2,weight=1)
 	selectorframe.pack()
+	chooselabel=tk.Label(selectorframe)
 	
 	# input field for text
-	text_input=tk.Entry(selectorframe)
+	text_input=tk.Entry(selectorframe,width=30)
 	text_input.grid(row=1,column=1)
 	
 	
 	# make the selection und get the data from there
-	selector=getInput(selectorframe)
+	selector=getInput(selectorframe,chooselabel)
 	
 	# make empty tkinter variables to later store the selection
 	selection=tk.StringVar()
@@ -394,11 +429,21 @@ def main():
 	outputframe.columnconfigure(1,weight=1)
 	outputframe.pack(pady=20,padx=20)
 	
-	# get the output of the checkboxes
-	gbif_onoff,maps_onoff=optionsMenu(selectorframe)
 	
 	# text field
-	text_field=tk.Text(outputframe,width=400,height=44,state="disabled",border=2,relief="solid",font="Arial 13",cursor="cross")
+	text_field=tk.Text(outputframe,width=225,height=44,state="disabled",border=2,relief="solid",font="Arial 13",cursor="cross")
+	
+	# map canvas
+	map_label=tk.Label(outputframe,text="")
+	
+	
+	mapframe=tk.Text(outputframe,width=0,height=0,state="disabled")
+	map_image=tk.PhotoImage()
+	render_map=tk.Label(mapframe)
+	
+	
+	# get the output of the checkboxes
+	gbif_onoff,map_onoff=optionsMenu(selectorframe,outputframe)
 	
 	# text field label
 	output_label=tk.Label(outputframe,text="Requested Information will show up below",font="Arial 14")
@@ -407,25 +452,41 @@ def main():
 	# confirm button
 	tk.Button(selectorframe,text="confirm",command=lambda: confirm()).grid(row=2,column=1,sticky="nw")
 	
-	# save button
-	tk.Button(selectorframe,text="clear",command=lambda: reset(text_field,text_input,output_label)).grid(row=2, column=1,sticky="ne")
+		
+	# clear button
+	tk.Button(selectorframe,text="clear",command=lambda: clearText(text_field,text_input,output_label)).grid(row=2, column=1,sticky="n")
+	
+	# reset button
+	tk.Button(selectorframe,text="reset",command=lambda: reset(text_field,text_input,output_label,map_onoff,gbif_onoff,selector,chooselabel)).grid(row=2, column=1,sticky="ne")
+	
+	
+
 	
 	# function to get currently entered values and print the search results in the text box
 	def confirm():
-		text_field.config(state="normal")
 		selection.set(selector.get()[:])
 		query.set(text_input.get()[:])
 		gbif_state=gbif_onoff.get()
+		map_state=map_onoff.get()
+		
+		text_field.config(state="normal")
 		setText(selection, query, text_field, output_label,gbif_state)
 		text_field.config(state="disabled")
+		
+		generateMap(map_state,selection,query,text_field,mapframe,map_image,render_map,map_label)
+		
 	
-	# render the output field inside the window
-	text_field.grid(row=1,column=0)
+	# render the output field and map frame inside the window
+	text_field.grid(row=1,column=0,sticky="sn")
+	map_label.grid(row=0,column=1,sticky="s")
+	mapframe.grid(row=1,column=1,sticky="sn")
+	render_map.pack(pady=75)
+	
 	
 	# make it so the input can be cofirmed by pressing return
 	window.bind("<Return>",lambda x: confirm())
 	# make it so that the content can be cleared by pressing escape
-	window.bind("<Escape>",lambda x: reset(text_field,text_input,output_label))
+	window.bind("<Escape>",lambda x: reset(text_field,text_input,output_label,map_onoff,gbif_onoff,selector,chooselabel))
 	
 	# loop the main function while the window is open
 	window.mainloop()
