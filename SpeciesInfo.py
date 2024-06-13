@@ -182,6 +182,8 @@ class SearchGBIF:
 			return ""
 
 
+
+
 # function for choosing the input method and the input
 def getInput(selectorframe,chooselabel):
 	
@@ -228,7 +230,7 @@ def getInput(selectorframe,chooselabel):
 
 
 # function for putting search results into the text field
-def setText(selection,query,text_field,output_label,gbif_state):
+def setText(selection,query,text_field,text_label,gbif_state):
 	sciName=""
 	sciNames=[]
 	# function for changing the output sentence on vernaculars depending on which are available
@@ -325,29 +327,32 @@ def setText(selection,query,text_field,output_label,gbif_state):
 	
 	# check if an input was given
 	if query.get()=="":
-		output_label.config(text=f"No {selection.get()} given")
+		text_label.config(text=f"No {selection.get()} given")
 		text_field.insert(1.0,''.join(none_text))
 	else:
-		output_label.config(text=f"Available information on {query.get()}:")
+		text_label.config(text=f"Available information on {query.get()}:")
 		text_field.insert(1.0,''.join(main_text))
 
 # function for generating a map png for the current taxon
-def generateMap(map_state,selection,query,text_field,mapframe,map_image,render_map,map_label):
+def generateMap(map_state,selection,query,text_field,map_field,map_image,render_map,map_label):
 	if map_state==1 and selection.get()!="Accession Number":
 		search_map=SearchGBIF(query.get())
 		map_path=search_map.makeMap()
 		if map_path!="":
 			text_field.config(width=125,height=44)
-			mapframe.config(width=100,height=44,padx=40,border=2,relief="solid")
-			map_label.config(text=f"Occurrence Map for {query.get()}:",font="Arial 14")
+			map_field.config(width=100,height=44,padx=40,border=2,relief="solid")
+			map_label.config(text=f"Occurrence Map for {query.get()}:")
 			map_image.config(file=map_path)
 			render_map.config(image=map_image)
 		else:
 			text_field.insert(1.0,"No usage key available, map creation failed.")
-			return ""
-	else:
-		text_field.config(width=200)
-		mapframe.config(width=0)
+	elif map_state==0:
+		text_field.config(width=225,height=44)
+		map_field.config(width=0,height=0,border=0,relief="flat")
+		map_label.config(text="")
+		map_image.config(file="")
+		render_map.config(image="")
+		
 
 #function for the checkbuttons in the Options column
 def optionsMenu(selectorframe):
@@ -368,12 +373,12 @@ def optionsMenu(selectorframe):
 
 
 # function for resetting all inputs
-def reset(text_field,text_input,output_label,gbif_onoff,map_onoff,selector,chooselabel):
+def reset(text_field,text_input,text_label,gbif_onoff,map_onoff,selector,chooselabel):
 	text_field.config(state="normal")
 	text_field.delete(1.0,tk.END)
 	text_field.config(state="disabled")
 	text_input.delete(0,tk.END)
-	output_label.config(text="Requested Information will show up below")
+	text_label.config(text="Requested Information will show up below")
 	gbif_onoff.set(0)
 	map_onoff.set(0)
 	selector.set("Accession Number")
@@ -381,12 +386,12 @@ def reset(text_field,text_input,output_label,gbif_onoff,map_onoff,selector,choos
 
 
 # function for clearing out the text and input fields as well as checkboxes
-def clearText(text_field,text_input,output_label):
+def clearText(text_field,text_input,text_label):
 	text_field.config(state="normal")
 	text_field.delete(1.0,tk.END)
 	text_field.config(state="disabled")
 	text_input.delete(0,tk.END)
-	output_label.config(text="Requested Information will show up below")
+	text_label.config(text="Requested Information will show up below")
 
 # main function
 def main():
@@ -424,7 +429,7 @@ def main():
 	
 	# frame for output
 	outputframe=tk.Frame(window)
-	outputframe.columnconfigure(0,weight=2)
+	outputframe.columnconfigure(0,weight=1)
 	outputframe.columnconfigure(1,weight=1)
 	outputframe.pack(pady=20,padx=20)
 	
@@ -432,29 +437,30 @@ def main():
 	# text field
 	text_field=tk.Text(outputframe,width=225,height=44,state="disabled",border=2,relief="solid",font="Arial 13",cursor="cross")
 	
-	# map canvas
-	map_label=tk.Label(outputframe,text="")
-	
-	
-	mapframe=tk.Text(outputframe,width=0,height=0,state="disabled")
+	# heading for the map
+	map_label=tk.Label(outputframe,text="",font="Arial 14")
+	# empty text field for the map
+	map_field=tk.Text(outputframe,width=0,height=0,state="disabled",cursor="cross")
+	# empty PhotoImage to provide an image for the map
 	map_image=tk.PhotoImage()
-	render_map=tk.Label(mapframe)
+	# empty label to attach the map to
+	render_map=tk.Label(map_field)
 
 	# get the output of the checkboxes
 	gbif_onoff,map_onoff=optionsMenu(selectorframe)
 	
-	# text field label
-	output_label=tk.Label(outputframe,text="Requested Information will show up below",font="Arial 14")
-	output_label.grid(row=0,column=0,sticky="s")
+	# heading for the text field
+	text_label=tk.Label(outputframe,text="Requested Information will show up below",font="Arial 14")
+	
 	
 	# confirm button
 	tk.Button(selectorframe,text="confirm",command=lambda: confirm()).grid(row=2,column=1,sticky="wne")
 
 	# clear button
-	tk.Button(selectorframe,text="clear",command=lambda: clearText(text_field,text_input,output_label),width=11).grid(row=3, column=1,sticky="nw")
+	tk.Button(selectorframe,text="clear",command=lambda: clearText(text_field,text_input,text_label),width=11).grid(row=3, column=1,sticky="nw")
 	
 	# reset button
-	tk.Button(selectorframe,text="reset",command=lambda: reset(text_field,text_input,output_label,map_onoff,gbif_onoff,selector,chooselabel),width=11).grid(row=3, column=1,sticky="ne")
+	tk.Button(selectorframe,text="reset",command=lambda: reset(text_field,text_input,text_label,map_onoff,gbif_onoff,selector,chooselabel),width=11).grid(row=3, column=1,sticky="ne")
 
 	# function to get currently entered values and print the search results in the text box
 	def confirm():
@@ -464,23 +470,24 @@ def main():
 		map_state=map_onoff.get()
 		
 		text_field.config(state="normal")
-		setText(selection, query, text_field, output_label,gbif_state)
+		setText(selection, query, text_field, text_label,gbif_state)
 		text_field.config(state="disabled")
 		
-		generateMap(map_state,selection,query,text_field,mapframe,map_image,render_map,map_label)
+		generateMap(map_state,selection,query,text_field,map_field,map_image,render_map,map_label)
 		
 	
 	# render the output field and map frame inside the window
+	text_label.grid(row=0,column=0,sticky="s")
 	text_field.grid(row=1,column=0,sticky="sn")
 	map_label.grid(row=0,column=1,sticky="s")
-	mapframe.grid(row=1,column=1,sticky="sn")
+	map_field.grid(row=1,column=1,sticky="sn")
 	render_map.pack(pady=75)
-	
+
 	
 	# make it so the input can be cofirmed by pressing return
 	window.bind("<Return>",lambda x: confirm())
 	# make it so that the content can be cleared by pressing escape
-	window.bind("<Escape>",lambda x: reset(text_field,text_input,output_label,map_onoff,gbif_onoff,selector,chooselabel))
+	window.bind("<Escape>",lambda x: reset(text_field,text_input,text_label,map_onoff,gbif_onoff,selector,chooselabel))
 	
 	# loop the main function while the window is open
 	window.mainloop()
