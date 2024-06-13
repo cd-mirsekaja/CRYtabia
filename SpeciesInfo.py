@@ -439,11 +439,12 @@ def clearText(text_field,text_input,text_label):
 # main function and window loop
 def main():
 	# set name of the program
-	program_title="CRYtabia v3"
+	program_title="CRYtabia"
+	program_version="0.3.9"
 	
 	# make root window
 	window=tk.Tk()
-	window.title(program_title)
+	window.title(f"{program_title} {program_version}")
 	window.geometry("1510x920")
 	
 	# lable for title
