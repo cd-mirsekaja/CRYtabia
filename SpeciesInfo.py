@@ -413,34 +413,61 @@ def optionsMenu(selectorframe):
 	return gbif_onoff,map_onoff
 
 
-# function for resetting all inputs
-def reset(text_field,text_input,text_label,gbif_onoff,map_onoff,selector,chooselabel):
-	text_field.config(state="normal")
-	text_field.delete(1.0,tk.END)
-	text_field.config(state="disabled")
-	text_input.delete(0,tk.END)
-	text_label.config(text="Requested Information will show up below")
-	gbif_onoff.set(0)
-	map_onoff.set(0)
-	selector.set("Accession Number")
-	chooselabel.config(text="Input Accession Number")
+class Buttons():
+	# function for initialising the class
+	def __init__(self,text_field,text_input,text_label,chooselabel,map_field,map_image,render_map,map_label,gbif_onoff,map_onoff,selector,selection,query):
+		self.text_field=text_field
+		self.text_input=text_input
+		self.text_label=text_label
+		self.chooselabel=chooselabel
+		self.map_field=map_field
+		self.map_image=map_image
+		self.render_map=render_map
+		self.map_label=map_label
+		self.gbif_onoff=gbif_onoff
+		self.map_onoff=map_onoff
+		self.selector=selector
+		self.selection=selection
+		self.query=query
 
-
-# function for clearing out the text and input fields as well as checkboxes
-def clearText(text_field,text_input,text_label):
-	text_field.config(state="normal")
-	text_field.delete(1.0,tk.END)
-	text_field.config(state="disabled")
-	text_input.delete(0,tk.END)
-	text_label.config(text="Requested Information will show up below")
-
-
+	# function for resetting all inputs
+	def reset(self):
+		self.text_field.config(state="normal")
+		self.text_field.delete(1.0,tk.END)
+		self.text_field.config(state="disabled")
+		self.text_input.delete(0,tk.END)
+		self.text_label.config(text="Requested Information will show up below")
+		self.gbif_onoff.set(0)
+		self.map_onoff.set(0)
+		self.selector.set("Accession Number")
+		self.chooselabel.config(text="Input Accession Number")
+	
+	# function for clearing out the text and input fields as well as checkboxes
+	def clearText(self):
+		self.text_field.config(state="normal")
+		self.text_field.delete(1.0,tk.END)
+		self.text_field.config(state="disabled")
+		self.text_input.delete(0,tk.END)
+		self.text_label.config(text="Requested Information will show up below")
+	
+	# function to get currently entered values and print the search results in the text box
+	def confirm(self):
+		self.selection.set(self.selector.get()[:])
+		self.query.set(self.text_input.get()[:])
+		gbif_state=self.gbif_onoff.get()
+		map_state=self.map_onoff.get()
+		
+		self.text_field.config(state="normal")
+		setText(self.selection, self.query, self.text_field, self.text_label,gbif_state)
+		self.text_field.config(state="disabled")
+		
+		generateMap(map_state,self.selection,self.query,self.text_field,self.map_field,self.map_image,self.render_map,self.map_label)
 
 # main function and window loop
 def main():
 	# set name of the program
 	program_title="CRYtabia"
-	program_version="0.3.9"
+	program_version="0.4.4"
 	
 	# make root window
 	window=tk.Tk()
@@ -496,29 +523,18 @@ def main():
 	# heading for the text field
 	text_label=tk.Label(outputframe,text="Requested Information will show up below",font="Arial 14")
 	
+	# prepare class Buttons
+	press_button=Buttons(text_field,text_input,text_label,chooselabel,map_field,map_image,render_map,map_label,gbif_onoff,map_onoff,selector,selection,query)
 	
 	# confirm button
-	tk.Button(selectorframe,text="confirm",command=lambda: confirm()).grid(row=2,column=1,sticky="wne")
+	tk.Button(selectorframe,text="confirm",command=lambda: press_button.confirm()).grid(row=2,column=1,sticky="wne")
 
 	# clear button
-	tk.Button(selectorframe,text="clear",command=lambda: clearText(text_field,text_input,text_label),width=11).grid(row=3, column=1,sticky="nw")
+	tk.Button(selectorframe,text="clear",command=lambda: press_button.clearText(),width=11).grid(row=3, column=1,sticky="nw")
 	
 	# reset button
-	tk.Button(selectorframe,text="reset",command=lambda: reset(text_field,text_input,text_label,map_onoff,gbif_onoff,selector,chooselabel),width=11).grid(row=3, column=1,sticky="ne")
+	tk.Button(selectorframe,text="reset",command=lambda: press_button.reset(),width=11).grid(row=3, column=1,sticky="ne")
 
-	# function to get currently entered values and print the search results in the text box
-	def confirm():
-		selection.set(selector.get()[:])
-		query.set(text_input.get()[:])
-		gbif_state=gbif_onoff.get()
-		map_state=map_onoff.get()
-		
-		text_field.config(state="normal")
-		setText(selection, query, text_field, text_label,gbif_state)
-		text_field.config(state="disabled")
-		
-		generateMap(map_state,selection,query,text_field,map_field,map_image,render_map,map_label)
-		
 	
 	# render the output field and map frame inside the window
 	text_label.grid(row=0,column=0,sticky="s")
@@ -529,9 +545,9 @@ def main():
 
 	
 	# make it so the input can be cofirmed by pressing return
-	window.bind("<Return>",lambda x: confirm())
+	window.bind("<Return>",lambda x: press_button.confirm())
 	# make it so that the content can be cleared by pressing escape
-	window.bind("<Escape>",lambda x: reset(text_field,text_input,text_label,map_onoff,gbif_onoff,selector,chooselabel))
+	window.bind("<Escape>",lambda x: press_button.reset())
 	
 	# loop the main function while the window is open
 	window.mainloop()
