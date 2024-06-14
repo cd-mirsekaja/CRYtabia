@@ -467,7 +467,7 @@ class Buttons():
 def main():
 	# set name of the program
 	program_title="CRYtabia"
-	program_version="0.4.4"
+	program_version="0.4.5"
 	
 	# make root window
 	window=tk.Tk()
