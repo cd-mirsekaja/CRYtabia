@@ -7,6 +7,8 @@ Usage:
 
 from setuptools import setup
 
+NAME = ['CRYtabia']
+VERSION = ['0.4.5']
 APP = ['SpeciesInfo.py']
 DATA_FILES = [
 	'infolib.xlsx',
@@ -14,7 +16,9 @@ DATA_FILES = [
 OPTIONS = {
 	"iconfile": "images/icon.icns",
 	'argv_emulation': True,
-	"packages": ['pandas','pygbif']}
+	"packages": ['pandas','pygbif']
+	
+	}
 
 setup(
     app=APP,

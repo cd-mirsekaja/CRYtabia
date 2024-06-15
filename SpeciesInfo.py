@@ -29,52 +29,13 @@ class SearchLibrary:
 		INPUT_TABLE = os.path.join(script_directory, "infolib.xlsx")
 		# get specific columns containing either taxonomic info or habitat info from reference table
 		self.TAXO_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="B:O")
-		self.HABITAT_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="B,P:S")
+		self.HABITAT_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="B,K,P:S")
 		
 		self.query=query
 		self.selection=selection
-		
 	
-	# function returns the accession numbers matched to a given scientific name
-	def sciname_to_accnumber(self):
-		table=self.TAXO_LIBRARY
-		matched_lines = table[table[table.columns[9]] == self.query].index.tolist()
-		if matched_lines!=[]:
-			acc_values=table.iloc[matched_lines,0].values.tolist()
-			acc_out=''.join(map(str, acc_values[0]))
-			return acc_out,acc_values
-		else:
-			return "",""
-	
-	# function for matching a given accession number with the reference table and returning extracted taxonomic information
-	def get_info_by_accnumber(self,acc_number):
-		table=self.TAXO_LIBRARY
-		# search for accession number in table
-		matched_lines = table[table[table.columns[0]] == acc_number].index.tolist()
-		
-		if matched_lines!=[]:
-			# save the species and taxon group to list variables
-			species_values = table.iloc[matched_lines,9].values
-			authority_values = table.iloc[matched_lines,10].values
-			taxgroup_values = table.iloc[matched_lines,13].values
-			engName_values = table.iloc[matched_lines,11].values
-			gerName_values = table.iloc[matched_lines,12].values
-			taxpath_values = table.iloc[matched_lines,1:7].values
-			
-			# join the individual list elements into strings
-			species_str = ''.join(map(str, species_values))
-			authority_str = ''.join(map(str, authority_values))
-			taxgroup_str = ''.join(map(str, taxgroup_values))
-			taxpath_str = ' > '.join(map(str, taxpath_values.flatten()))
-			
-			engName_str = ''.join(map(str, engName_values))
-			gerName_str = ''.join(map(str, gerName_values))
-			
-			return species_str,authority_str,taxpath_str,taxgroup_str,engName_str,gerName_str
-		else:
-			return "","","","","",""
-	
-	def get_info_from_table(self):
+	# function for checking whether the query is available in the table or not
+	def is_in_table(self):
 		table=self.TAXO_LIBRARY
 		
 		if self.selection=="Accession Number":
@@ -86,28 +47,80 @@ class SearchLibrary:
 			matched_lines = table[table[table.columns[9]] == self.query].index.tolist()
 		
 		if matched_lines!=[]:
-			# save the species and taxon group to list variables
-			acc_values=table.iloc[matched_lines,0].values.tolist()
-			species_values = table.iloc[matched_lines,9].values
-			authority_values = table.iloc[matched_lines,10].values
-			taxgroup_values = table.iloc[matched_lines,13].values
-			engName_values = table.iloc[matched_lines,11].values
-			gerName_values = table.iloc[matched_lines,12].values
-			taxpath_values = table.iloc[matched_lines,1:7].values
-			
-			# join the individual list elements into strings
-			
-			species_str = ''.join(map(str, species_values[0]))
-			authority_str = ''.join(map(str, authority_values[0]))
-			taxgroup_str = ''.join(map(str, taxgroup_values[0]))
-			taxpath_str = ' > '.join(map(str, taxpath_values[0].flatten()))
-			#acc_str = ', '.join(map(str, acc_values))
-			engName_str = ''.join(map(str, engName_values[0]))
-			gerName_str = ''.join(map(str, gerName_values[0]))
-			
-			return species_str,authority_str,taxpath_str,taxgroup_str,engName_str,gerName_str,acc_values
+			return True
 		else:
-			return "","","","","",""
+			return False
+	
+	# function for retrieving taxonomic information from the table
+	def get_info_from_table(self):
+		table=self.TAXO_LIBRARY
+		
+		if self.selection=="Accession Number":
+			# search for accession number in table
+			matched_lines = table[table[table.columns[0]] == self.query].index.tolist()
+			
+		elif self.selection=="Scientific Name":
+			# search for the scientific name in the table
+			matched_lines = table[table[table.columns[9]] == self.query].index.tolist()
+		
+		# save the species and taxon group to list variables
+		acc_values=table.iloc[matched_lines,0].values.tolist()
+		species_values = table.iloc[matched_lines,9].values
+		authority_values = table.iloc[matched_lines,10].values
+		taxgroup_values = table.iloc[matched_lines,13].values
+		engName_values = table.iloc[matched_lines,11].values
+		gerName_values = table.iloc[matched_lines,12].values
+		taxpath_values = table.iloc[matched_lines,1:7].values
+		
+		# join the individual list elements into strings
+		species_str = ''.join(map(str, species_values[0]))
+		authority_str = ''.join(map(str, authority_values[0]))
+		taxgroup_str = ''.join(map(str, taxgroup_values[0]))
+		taxpath_str = ' > '.join(map(str, taxpath_values[0].flatten()))
+		engName_str = ''.join(map(str, engName_values[0]))
+		gerName_str = ''.join(map(str, gerName_values[0]))
+
+		return species_str,authority_str,taxpath_str,taxgroup_str,engName_str,gerName_str,acc_values
+	
+	# function for matching a given accession number with the reference table and returning extracted habitat information
+	def get_habitat_from_table(self):
+		table=self.HABITAT_LIBRARY
+		out_list=[]
+		
+		if self.selection=="Accession Number":
+			# search for accession number in table
+			matched_lines = table[table[table.columns[0]] == self.query].index.tolist()
+			
+		elif self.selection=="Scientific Name":
+			# search for the scientific name in the table
+			matched_lines = table[table[table.columns[1]] == self.query].index.tolist()
+		
+		if matched_lines!=[]:
+			# check if habitat is marine
+			if table.iloc[matched_lines,2].values.size>0:
+				out_list.append("marine")
+			
+			# check if habitat is brackish
+			if table.iloc[matched_lines,3].values.size>0:
+				out_list.append("brackish")
+			
+			# check if habitat is fresh
+			if table.iloc[matched_lines,4].values.size>0:
+				out_list.append("freshwater")
+			
+			# check if habitat is terrestrial
+			if table.iloc[matched_lines,5].values.size>0:
+				out_list.append("terrestrial")
+			
+			# make the output string
+			if out_list!=[]:
+				out_string=', '.join(map(str,out_list))
+			else:
+				out_string=''.join("unknown")
+				
+			return out_string
+		else:
+			return ""
 	
 	# function for matching a given taxon group with the reference table and returning the species belonging to that taxon
 	def get_info_by_taxon_group(self):
@@ -138,38 +151,6 @@ class SearchLibrary:
 			return sciNames,matched_title
 		else:
 			return [],""
-	
-	# function for matching a given accession number with the reference table and returning extracted habitat information
-	def get_habitat_by_accnumber(self,acc_number):
-		table=self.HABITAT_LIBRARY
-		
-		# search for accession number in table
-		matched_lines = table[table[table.columns[0]] == acc_number].index.tolist()
-		out_list=[]
-	
-		# check if habitat is marine
-		if table.iloc[matched_lines,1].values.size>0:
-			out_list.append("marine")
-		
-		# check if habitat is brackish
-		if table.iloc[matched_lines,2].values.size>0:
-			out_list.append("brackish")
-		
-		# check if habitat is fresh
-		if table.iloc[matched_lines,3].values.size>0:
-			out_list.append("freshwater")
-		
-		# check if habitat is terrestrial
-		if table.iloc[matched_lines,4].values.size>0:
-			out_list.append("terrestrial")
-		
-		# make the output string
-		if out_list!=[]:
-			out_string=', '.join(map(str,out_list))
-		else:
-			out_string=''.join("unknown")
-			
-		return out_string
 
 
 # class for searching the GBIF Database
@@ -268,14 +249,14 @@ def getInput(selectorframe,chooselabel):
 	def select_option_sciName(event=None):
 		selector.set("Scientific Name")
 		clicked()
-	def select_option3(event=None):
+	def select_option_taxGroup(event=None):
 		selector.set("Taxon Group")
 		clicked()
 	
 	# bind keyboard shortcuts for switching between radiobuttons
 	selectorframe.bind_all("<Command-Key-1>", select_option_accNumber)
 	selectorframe.bind_all("<Command-Key-2>", select_option_sciName)
-	selectorframe.bind_all("<Command-Key-3>", select_option3)
+	selectorframe.bind_all("<Command-Key-3>", select_option_taxGroup)
 	
 	return selector
 
@@ -285,6 +266,7 @@ def setText(selection,query,text_field,text_label,gbif_state):
 	sciName=""
 	sciNames=[]
 	search_table=SearchLibrary(query.get(),selection.get())
+	
 	# function for changing the output sentence on vernaculars depending on which are available
 	def vernacular_text(engName,gerName):
 		if engName=="nan" and gerName=="nan":
@@ -308,20 +290,26 @@ def setText(selection,query,text_field,text_label,gbif_state):
 	
 	# check for input of radio buttons
 	if selection.get()!="Taxon Group" and query.get()!="":
-		#acc_number,acc_list=search_table.sciname_to_accnumber()
-		sciName,authority,taxPath,taxGroup,engName,gerName,accList=search_table.get_info_from_table()
+		# check if species is available in reference table
+		inTable=search_table.is_in_table()
 		
-		habitats=search_table.get_habitat_by_accnumber(accList[0])
-		
-		if selection.get()=="Accession Number":
-			acc_text=""
-		elif selection.get()=="Scientific Name" and len(accList)==1:
-			acc_text=f"One available Accession Number, {accList[0]}.\n\n"
-		elif selection.get()=="Scientific Name" and len(accList)>1:
-			acc_text=f"Available Accession Number are {', '.join(accList)}.\n\n"
-		
-		if sciName!="":
+		if inTable==True:
+			# get taxonomic information
+			sciName,authority,taxPath,taxGroup,engName,gerName,accList=search_table.get_info_from_table()
+			# get habitats the species lives in
+			habitats=search_table.get_habitat_from_table()
+			
+			# combine available accession numbers into string
+			if selection.get()=="Accession Number":
+				acc_text=""
+			elif selection.get()=="Scientific Name" and len(accList)==1:
+				acc_text=f"One available Accession Number, {accList[0]}.\n\n"
+			elif selection.get()=="Scientific Name" and len(accList)>1:
+				acc_text=f"Available Accession Number are {', '.join(accList)}.\n\n"
+			
+			# get vernacular name string
 			vern_text=vernacular_text(engName, gerName)
+			# set main output text
 			main_text=[
 				f"\n{sciName} {authority} belongs to the {taxGroup}.\n",
 				vern_text+"\n",
@@ -333,8 +321,7 @@ def setText(selection,query,text_field,text_label,gbif_state):
 				"\n---------------------------------------------------"+"\n"
 				]
 		else:
-			search=SearchGBIF(query.get())
-			taxPath=search.getTaxpath()
+			# set main output text
 			main_text=[
 				f"\nScientific Name {query.get()} was not found in Table.\n",
 				f"{gbif_out}",
@@ -342,10 +329,13 @@ def setText(selection,query,text_field,text_label,gbif_state):
 				]
 	
 	elif selection.get()=="Taxon Group" and query.get()!="":
+		# get scientific names and name of taxon group
 		sciNames,col_title=search_table.get_info_by_taxon_group()
+		# get the number of species belonging to the taxon
 		speciescount=len(sciNames)
 		
-		if sciNames!=[]:
+		if speciescount>0:
+			# set main output text
 			main_text=[
 				f"\n{speciescount} Species found in table belonging to {col_title} {query.get()}:\n",
 				f"{', '.join(sciNames)}\n",
@@ -353,6 +343,7 @@ def setText(selection,query,text_field,text_label,gbif_state):
 				"\n---------------------------------------------------"+"\n"
 				]
 		else:
+			# set main output text
 			main_text=[
 				f"\nTaxon Group {query.get()} was not found in Table.\n",
 				f"{gbif_out}",
@@ -380,8 +371,8 @@ def generateMap(map_state,selection,query,text_field,map_field,map_image,render_
 		search_map=SearchGBIF(query.get())
 		map_path=search_map.makeMap()
 		if map_path!="":
-			text_field.config(width=150,height=44)
-			map_field.config(width=100,height=44,padx=40,border=2,relief="solid")
+			text_field.config(width=100,height=44)
+			map_field.config(width=150,height=44,padx=40,border=2,relief="solid")
 			map_label.config(text=f"Occurrence Map for {query.get()}:")
 			map_image.config(file=map_path)
 			render_map.config(image=map_image)
@@ -467,7 +458,7 @@ class Buttons():
 def main():
 	# set name of the program
 	program_title="CRYtabia"
-	program_version="0.4.5"
+	program_version="0.4.6"
 	
 	# make root window
 	window=tk.Tk()
