@@ -15,6 +15,7 @@ Comments are always above the commented line.
 
 #import tkinter for managing GUI
 import tkinter as tk
+#from ttkthemes import ThemedTk
 
 # class for searching the input table
 class SearchLibrary:
@@ -214,9 +215,64 @@ class SearchGBIF:
 		else:
 			return ""
 
+# class contatining the button functions
+class Buttons:
+	# function for initialising the class
+	def __init__(self,text_field,text_input,text_label,chooselabel,map_field,map_image,render_map,map_label,gbif_onoff,map_onoff,selector,selection,query):
+		self.text_field=text_field
+		self.text_input=text_input
+		self.text_label=text_label
+		self.chooselabel=chooselabel
+		self.map_field=map_field
+		self.map_image=map_image
+		self.render_map=render_map
+		self.map_label=map_label
+		self.gbif_onoff=gbif_onoff
+		self.map_onoff=map_onoff
+		self.selector=selector
+		self.selection=selection
+		self.query=query
+
+	# function for resetting all inputs and fields
+	def reset(self):
+		self.text_field.config(state="normal")
+		self.text_field.delete(1.0,tk.END)
+		self.text_field.config(state="disabled")
+		self.text_input.delete(0,tk.END)
+		self.text_label.config(text="Requested Information will show up below")
+		self.gbif_onoff.set(0)
+		self.map_onoff.set(0)
+		self.selector.set("Accession Number")
+		self.chooselabel.config(text="Input Accession Number")
+		self.text_field.config(width=250,height=44)
+		self.map_field.config(width=0,height=0,border=0,relief="flat")
+		self.map_label.config(text="")
+		self.map_image.config(file="")
+		self.render_map.config(image="")
+	
+	# function for clearing out the text and input fields as well as checkboxes
+	def clearText(self):
+		self.text_field.config(state="normal")
+		self.text_field.delete(1.0,tk.END)
+		self.text_field.config(state="disabled")
+		self.text_input.delete(0,tk.END)
+		self.text_label.config(text="Requested Information will show up below")
+	
+	# function to get currently entered values and print the search results in the text box
+	def confirm(self):
+		self.selection.set(self.selector.get()[:])
+		self.query.set(self.text_input.get()[:])
+		gbif_state=self.gbif_onoff.get()
+		map_state=self.map_onoff.get()
+		
+		self.text_field.config(state="normal")
+		setText(self.selection, self.query, self.text_field, self.text_label,gbif_state)
+		self.text_field.config(state="disabled")
+		
+		generateMap(map_state,self.selection,self.query,self.text_field,self.map_field,self.map_image,self.render_map,self.map_label)
 
 
-# function for choosing the input method and the input
+# function for choosing the input method and getting the user input
 def getInput(selectorframe,chooselabel):
 	
 	# input choosing label
@@ -384,7 +440,6 @@ def generateMap(map_state,selection,query,text_field,map_field,map_image,render_
 		map_label.config(text="")
 		map_image.config(file="")
 		render_map.config(image="")
-		
 
 #function for the checkbuttons in the Options column
 def optionsMenu(selectorframe):
@@ -401,64 +456,34 @@ def optionsMenu(selectorframe):
 	enable_maps=tk.Checkbutton(selectorframe,text="Generate Map (WIP)",variable=map_onoff, onvalue=1, offvalue=0)
 	enable_maps.grid(row=2,column=3,padx=20,sticky="nw")
 	
+	# function for switching the map_state
+	def switch_map(event=None):
+		if map_onoff.get()==1:
+			map_onoff.set(0)
+		elif map_onoff.get()==0:
+			map_onoff.set(1)
+	
+	# function for switching the gbif_state
+	def switch_gbif(event=None):
+		if gbif_onoff.get()==1:
+			gbif_onoff.set(0)
+		elif gbif_onoff.get()==0:
+			gbif_onoff.set(1)
+	
+	# keybindings for map and gbif search switching
+	selectorframe.bind_all("<Command-Key-l>", switch_map)
+	selectorframe.bind_all("<Command-Key-k>",switch_gbif)
+	
+	
 	return gbif_onoff,map_onoff
 
 
-class Buttons():
-	# function for initialising the class
-	def __init__(self,text_field,text_input,text_label,chooselabel,map_field,map_image,render_map,map_label,gbif_onoff,map_onoff,selector,selection,query):
-		self.text_field=text_field
-		self.text_input=text_input
-		self.text_label=text_label
-		self.chooselabel=chooselabel
-		self.map_field=map_field
-		self.map_image=map_image
-		self.render_map=render_map
-		self.map_label=map_label
-		self.gbif_onoff=gbif_onoff
-		self.map_onoff=map_onoff
-		self.selector=selector
-		self.selection=selection
-		self.query=query
-
-	# function for resetting all inputs
-	def reset(self):
-		self.text_field.config(state="normal")
-		self.text_field.delete(1.0,tk.END)
-		self.text_field.config(state="disabled")
-		self.text_input.delete(0,tk.END)
-		self.text_label.config(text="Requested Information will show up below")
-		self.gbif_onoff.set(0)
-		self.map_onoff.set(0)
-		self.selector.set("Accession Number")
-		self.chooselabel.config(text="Input Accession Number")
-	
-	# function for clearing out the text and input fields as well as checkboxes
-	def clearText(self):
-		self.text_field.config(state="normal")
-		self.text_field.delete(1.0,tk.END)
-		self.text_field.config(state="disabled")
-		self.text_input.delete(0,tk.END)
-		self.text_label.config(text="Requested Information will show up below")
-	
-	# function to get currently entered values and print the search results in the text box
-	def confirm(self):
-		self.selection.set(self.selector.get()[:])
-		self.query.set(self.text_input.get()[:])
-		gbif_state=self.gbif_onoff.get()
-		map_state=self.map_onoff.get()
-		
-		self.text_field.config(state="normal")
-		setText(self.selection, self.query, self.text_field, self.text_label,gbif_state)
-		self.text_field.config(state="disabled")
-		
-		generateMap(map_state,self.selection,self.query,self.text_field,self.map_field,self.map_image,self.render_map,self.map_label)
 
 # main function and window loop
 def main():
 	# set name of the program
 	program_title="CRYtabia"
-	program_version="0.4.6"
+	program_version="0.4.7"
 	
 	# make root window
 	window=tk.Tk()
@@ -478,11 +503,10 @@ def main():
 	chooselabel=tk.Label(selectorframe)
 	
 	# input field for text
-	text_input=tk.Entry(selectorframe,width=30)
+	text_input=tk.Entry(selectorframe,width=30,border=2,relief="sunken")
 	text_input.grid(row=1,column=1)
 	
-	
-	# make the selection und get the data from there
+	# get the selection und get the data from there
 	selector=getInput(selectorframe,chooselabel)
 	
 	# make empty tkinter variables to later store the selection
@@ -496,7 +520,7 @@ def main():
 	outputframe.pack(pady=20,padx=20)
 	
 	
-	# text field
+	# text field for output text
 	text_field=tk.Text(outputframe,width=225,height=44,state="disabled",border=2,relief="solid",font="Arial 13",cursor="cross")
 	
 	# heading for the map
@@ -515,7 +539,7 @@ def main():
 	text_label=tk.Label(outputframe,text="Requested Information will show up below",font="Arial 14")
 	
 	# prepare class Buttons
-	press_button=Buttons(text_field,text_input,text_label,chooselabel,map_field,map_image,render_map,map_label,gbif_onoff,map_onoff,selector,selection,query)
+	press_button = Buttons(text_field,text_input,text_label,chooselabel,map_field,map_image,render_map,map_label,gbif_onoff,map_onoff,selector,selection,query)
 	
 	# confirm button
 	tk.Button(selectorframe,text="confirm",command=lambda: press_button.confirm()).grid(row=2,column=1,sticky="wne")
