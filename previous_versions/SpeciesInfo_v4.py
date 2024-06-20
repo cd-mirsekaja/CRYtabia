@@ -216,26 +216,10 @@ class SearchGBIF:
 		else:
 			return ""
 
-class SearchWikipedia:
-	
-	def __init__(self,sciName):
-		import wikipediaapi as wiki
-		self.wiki_en=wiki.Wikipedia('CryptochromeCoSegregation (ronja.roesner@uni-oldenburg.de','en')
-		self.sciName=sciName
-	
-	def get_summary(self):
-		
-		if self.wiki_en.page(self.sciName).exists():
-			summary=self.wiki_en.page(self.sciName).summary
-		else:
-			summary="Wikpedia page does not exist."
-		
-		return summary
-
 # class contatining the button functions
 class Buttons:
 	# function for initialising the class
-	def __init__(self,text_field,text_input,text_label,chooselabel,map_field,map_image,background_image,render_map,map_label,gbif_onoff,wiki_onoff,map_onoff,selector,selection,query):
+	def __init__(self,text_field,text_input,text_label,chooselabel,map_field,map_image,background_image,render_map,map_label,gbif_onoff,map_onoff,selector,selection,query):
 		self.text_field=text_field
 		self.text_input=text_input
 		self.text_label=text_label
@@ -246,7 +230,6 @@ class Buttons:
 		self.render_map=render_map
 		self.map_label=map_label
 		self.gbif_onoff=gbif_onoff
-		self.wiki_onoff=wiki_onoff
 		self.map_onoff=map_onoff
 		self.selector=selector
 		self.selection=selection
@@ -260,7 +243,6 @@ class Buttons:
 		self.text_input.delete(0,tk.END)
 		self.text_label.config(text="Requested Information will show up below")
 		self.gbif_onoff.set(0)
-		self.wiki_onoff.set(0)
 		self.map_onoff.set(0)
 		self.selector.set("Accession Number")
 		self.chooselabel.config(text="Input Accession Number")
@@ -283,11 +265,10 @@ class Buttons:
 		self.selection.set(self.selector.get()[:])
 		self.query.set(self.text_input.get()[:])
 		gbif_state=self.gbif_onoff.get()
-		wiki_state=self.wiki_onoff.get()
 		map_state=self.map_onoff.get()
 		
 		self.text_field.config(state="normal")
-		setText(self.selection, self.query, self.text_field, self.text_label,gbif_state,wiki_state)
+		setText(self.selection, self.query, self.text_field, self.text_label,gbif_state)
 		self.text_field.config(state="disabled")
 		
 		generateMap(map_state,self.selection,self.query,self.text_field,self.map_field,self.map_image,self.background_image,self.render_map,self.map_label)
@@ -339,7 +320,7 @@ def getInput(selectorframe,chooselabel):
 
 
 # function for putting search results into the text field
-def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
+def setText(selection,query,text_field,text_label,gbif_state):
 	sciName=""
 	sciNames=[]
 	search_table=SearchLibrary(query.get(),selection.get())
@@ -358,24 +339,12 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 		return text_out
 	
 	# if GBIF Search is enabled, output search results
-	if gbif_state==1 and selection.get()!="Accession Number":
+	if gbif_state==1:
 		gbif_search=SearchGBIF((query.get()))
 		gbif_results=gbif_search.getTaxpath()
 		gbif_out=f"\nInformation from GBIF backbone:\n{gbif_results}\n"
-	elif gbif_state==1 and selection.get()=="Accession Number":
-		gbif_out="\nNo GBIF information available for Accession Numbers.\n"
 	elif gbif_state==0:
 		gbif_out=""
-	
-	if wiki_state==1 and selection.get()!="Accession Number":
-		wiki_search=SearchWikipedia(query.get())
-		wiki_summary=wiki_search.get_summary()
-		wiki_out=f"\nInformation from Wikipedia page:\n{wiki_summary}\n"
-	elif wiki_state==1 and selection.get()=="Accession Number":
-		wiki_out="\nNo Wikipedia information for Accession Numbers.\n"
-	elif wiki_state==0:
-		wiki_out=""
-		
 	
 	# check for input of radio buttons
 	if selection.get()!="Taxon Group" and query.get()!="":
@@ -407,7 +376,6 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 				"Taxonomic Path as kingdom > phylum > class > order > family > genus:\n",
 				f"{taxPath}\n",
 				f"{gbif_out}",
-				f"{wiki_out}",
 				"\n---------------------------------------------------"+"\n"
 				]
 		else:
@@ -415,7 +383,6 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 			main_text=[
 				f"\nScientific Name {query.get()} was not found in Table.\n",
 				f"{gbif_out}",
-				f"{wiki_out}",
 				"\n---------------------------------------------------"+"\n"
 				]
 	
@@ -431,7 +398,6 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 				f"\n{speciescount} Species found in table belonging to {col_title} {query.get()}:\n",
 				f"{', '.join(sciNames)}\n",
 				f"{gbif_out}",
-				f"{wiki_out}",
 				"\n---------------------------------------------------"+"\n"
 				]
 		else:
@@ -439,7 +405,6 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 			main_text=[
 				f"\nTaxon Group {query.get()} was not found in Table.\n",
 				f"{gbif_out}",
-				f"{wiki_out}",
 				"\n---------------------------------------------------"+"\n"
 				]
 
@@ -500,21 +465,13 @@ def optionsMenu(selectorframe):
 	
 	# checkbox for enabling GBIF search
 	gbif_onoff=tk.IntVar()
-	enable_gbif=tk.Checkbutton(selectorframe,text='Search GBIF Backbone*',variable=gbif_onoff, onvalue=1, offvalue=0)
+	enable_gbif=tk.Checkbutton(selectorframe,text='Search GBIF Backbone',variable=gbif_onoff, onvalue=1, offvalue=0)
 	enable_gbif.grid(row=1,column=3,padx=20,sticky="nw")
-	
-	# checkbox for enabling Wikipedia search
-	wiki_onoff=tk.IntVar()
-	enable_wiki=tk.Checkbutton(selectorframe,text='Get Wikipedia summary*',variable=wiki_onoff, onvalue=1, offvalue=0)
-	enable_wiki.grid(row=2,column=3,padx=20,sticky="nw")
 	
 	# checkbox for enabling map generation
 	map_onoff=tk.IntVar()
-	enable_maps=tk.Checkbutton(selectorframe,text="Generate Map*",variable=map_onoff, onvalue=1, offvalue=0)
-	enable_maps.grid(row=3,column=3,padx=20,sticky="nw")
-	
-	# subtitle of column
-	tk.Label(selectorframe,text="*internet access required",font="Arial 12").grid(row=6,column=3,padx=20,sticky="nw")
+	enable_maps=tk.Checkbutton(selectorframe,text="Generate Map (WIP)",variable=map_onoff, onvalue=1, offvalue=0)
+	enable_maps.grid(row=2,column=3,padx=20,sticky="nw")
 	
 	# function for switching the map_state
 	def switch_map(event=None):
@@ -522,13 +479,6 @@ def optionsMenu(selectorframe):
 			map_onoff.set(0)
 		elif map_onoff.get()==0:
 			map_onoff.set(1)
-	
-	# function for switching the wiki_state
-	def switch_wiki(event=None):
-		if wiki_onoff.get()==1:
-			wiki_onoff.set(0)
-		elif wiki_onoff.get()==0:
-			wiki_onoff.set(1)
 	
 	# function for switching the gbif_state
 	def switch_gbif(event=None):
@@ -539,11 +489,10 @@ def optionsMenu(selectorframe):
 	
 	# keybindings for map and gbif search switching
 	selectorframe.bind_all("<Command-Key-l>", switch_map)
-	selectorframe.bind_all("<Command-Key-k>",switch_wiki)
-	selectorframe.bind_all("<Command-Key-j>",switch_gbif)
+	selectorframe.bind_all("<Command-Key-k>",switch_gbif)
 	
 	
-	return gbif_onoff,wiki_onoff,map_onoff
+	return gbif_onoff,map_onoff
 
 
 
@@ -551,7 +500,7 @@ def optionsMenu(selectorframe):
 def main():
 	# set name of the program
 	program_title="CRYtabia"
-	program_version="0.5.0"
+	program_version="0.4.9"
 	
 	# make root window
 	window=tk.Tk()
@@ -605,13 +554,13 @@ def main():
 
 	
 	# get the output of the checkboxes
-	gbif_onoff,wiki_onoff,map_onoff=optionsMenu(selectorframe)
+	gbif_onoff,map_onoff=optionsMenu(selectorframe)
 	
 	# heading for the text field
 	text_label=tk.Label(outputframe,text="Requested Information will show up below",font="Arial 14")
 	
 	# prepare class Buttons
-	press_button = Buttons(text_field,text_input,text_label,chooselabel,map_field,map_image,background_image,render_map,map_label,gbif_onoff,wiki_onoff,map_onoff,selector,selection,query)
+	press_button = Buttons(text_field,text_input,text_label,chooselabel,map_field,map_image,background_image,render_map,map_label,gbif_onoff,map_onoff,selector,selection,query)
 	
 	# confirm button
 	tk.Button(selectorframe,text="confirm",command=lambda: press_button.confirm()).grid(row=2,column=1,sticky="wne")
