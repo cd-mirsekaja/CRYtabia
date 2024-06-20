@@ -15,7 +15,7 @@ Comments are always above the commented line.
 
 #import tkinter for managing GUI
 import tkinter as tk
-#from ttkthemes import ThemedTk
+from PIL import Image, ImageTk
 
 # class for searching the input table
 class SearchLibrary:
@@ -154,7 +154,7 @@ class SearchLibrary:
 			return [],""
 
 
-# class for searching the GBIF Database
+# class for searching the GBIF (Global Biodiversity Information Facility, https://gbif.org) Database
 class SearchGBIF:
 	def __init__(self,sciName,):
 		from pygbif import species as sp
@@ -209,7 +209,7 @@ class SearchGBIF:
 		from pygbif import maps
 		if 'usageKey' in self.backbone:
 			taxkey=self.backbone['usageKey']
-			outmap=maps.map(taxonKey=taxkey,source="density",bin="hex",style="purpleYellow.poly")
+			outmap=maps.map(taxonKey=taxkey,source="density",bin="hex",hexPerTile="200",style="purpleYellow-noborder.poly",format="@1x.png",srs="EPSG:3857",x=0,y=0)
 			map_path=outmap.path
 			return map_path
 		else:
@@ -218,13 +218,14 @@ class SearchGBIF:
 # class contatining the button functions
 class Buttons:
 	# function for initialising the class
-	def __init__(self,text_field,text_input,text_label,chooselabel,map_field,map_image,render_map,map_label,gbif_onoff,map_onoff,selector,selection,query):
+	def __init__(self,text_field,text_input,text_label,chooselabel,map_field,map_image,background_image,render_map,map_label,gbif_onoff,map_onoff,selector,selection,query):
 		self.text_field=text_field
 		self.text_input=text_input
 		self.text_label=text_label
 		self.chooselabel=chooselabel
 		self.map_field=map_field
 		self.map_image=map_image
+		self.background_image=background_image
 		self.render_map=render_map
 		self.map_label=map_label
 		self.gbif_onoff=gbif_onoff
@@ -247,7 +248,7 @@ class Buttons:
 		self.text_field.config(width=250,height=44)
 		self.map_field.config(width=0,height=0,border=0,relief="flat")
 		self.map_label.config(text="")
-		self.map_image.config(file="")
+		self.map_image.paste(self.background_image)
 		self.render_map.config(image="")
 	
 	# function for clearing out the text and input fields as well as checkboxes
@@ -426,20 +427,31 @@ def generateMap(map_state,selection,query,text_field,map_field,map_image,render_
 	if map_state==1 and selection.get()!="Accession Number":
 		search_map=SearchGBIF(query.get())
 		map_path=search_map.makeMap()
+		
 		if map_path!="":
 			text_field.config(width=100,height=44)
 			map_field.config(width=150,height=44,padx=40,border=2,relief="solid")
 			map_label.config(text=f"Occurrence Map for {query.get()}:")
-			map_image.config(file=map_path)
+			#map_image.config(file=map_path)
+			
+			
+			
+			img1=Image.open(map_path)
+			img2=Image.open("images/world_map.png")
+			img2.paste(img1, (-12,60), mask=img1)
+			
+			map_image.paste(img2)
 			render_map.config(image=map_image)
+			
 		else:
 			text_field.insert(1.0,"No usage key available, map creation failed.")
 	elif map_state==0:
 		text_field.config(width=250,height=44)
 		map_field.config(width=0,height=0,border=0,relief="flat")
 		map_label.config(text="")
-		map_image.config(file="")
+		#map_image.config(file="")
 		render_map.config(image="")
+
 
 #function for the checkbuttons in the Options column
 def optionsMenu(selectorframe):
@@ -483,7 +495,7 @@ def optionsMenu(selectorframe):
 def main():
 	# set name of the program
 	program_title="CRYtabia"
-	program_version="0.4.7"
+	program_version="0.4.8"
 	
 	# make root window
 	window=tk.Tk()
@@ -527,11 +539,15 @@ def main():
 	map_label=tk.Label(outputframe,text="",font="Arial 14")
 	# empty text field for the map
 	map_field=tk.Text(outputframe,width=0,height=0,state="disabled",cursor="cross")
-	# empty PhotoImage to provide an image for the map
-	map_image=tk.PhotoImage()
+	
 	# empty label to attach the map to
 	render_map=tk.Label(map_field)
 
+	# empty PhotoImage to provide an image for the map
+	background_image=Image.open("images/transparent_background.png")
+	map_image=ImageTk.PhotoImage(background_image)
+
+	
 	# get the output of the checkboxes
 	gbif_onoff,map_onoff=optionsMenu(selectorframe)
 	
@@ -539,7 +555,7 @@ def main():
 	text_label=tk.Label(outputframe,text="Requested Information will show up below",font="Arial 14")
 	
 	# prepare class Buttons
-	press_button = Buttons(text_field,text_input,text_label,chooselabel,map_field,map_image,render_map,map_label,gbif_onoff,map_onoff,selector,selection,query)
+	press_button = Buttons(text_field,text_input,text_label,chooselabel,map_field,map_image,background_image,render_map,map_label,gbif_onoff,map_onoff,selector,selection,query)
 	
 	# confirm button
 	tk.Button(selectorframe,text="confirm",command=lambda: press_button.confirm()).grid(row=2,column=1,sticky="wne")
