@@ -20,7 +20,7 @@ from PIL import Image, ImageTk
 # import library for accessing the os
 import os
 
-# set script directory
+# get script directory
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # class for searching the input table
@@ -220,12 +220,15 @@ class SearchGBIF:
 		else:
 			return ""
 
+# class for getting information from Wikipedia
 class SearchWikipedia:
 	
 	def __init__(self,sciName):
 		import wikipediaapi as wiki
 		self.wiki_en=wiki.Wikipedia('CryptochromeCoSegregation (ronja.roesner@uni-oldenburg.de','en')
 		self.sciName=sciName
+	
+	
 	
 	def get_summary(self):
 		
@@ -268,7 +271,7 @@ class Buttons:
 		self.map_onoff.set(0)
 		self.selector.set("Accession Number")
 		self.chooselabel.config(text="Input Accession Number")
-		self.text_field.config(width=250,height=44)
+		self.text_field.config(width=250,height=40)
 		self.map_field.config(width=0,height=0,border=0,relief="flat")
 		self.map_label.config(text="")
 		self.map_image.paste(self.background_image)
@@ -340,7 +343,6 @@ def getInput(selectorframe,chooselabel):
 	selectorframe.bind_all("<Command-Key-3>", select_option_taxGroup)
 	
 	return selector
-
 
 # function for putting search results into the text field
 def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
@@ -432,7 +434,7 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 		if speciescount>0:
 			# set main output text
 			main_text=[
-				f"\n{speciescount} Species found in table belonging to {col_title} {query.get()}:\n",
+				f"\n{speciescount} species found in table belonging to {col_title.lower()} {query.get().capitalize()}:\n",
 				f"{', '.join(sciNames)}\n",
 				f"{gbif_out}",
 				f"{wiki_out}",
@@ -461,7 +463,6 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 		text_label.config(text=f"Available information on {query.get()}:")
 		text_field.insert(1.0,''.join(main_text))
 
-
 # function for generating a map png for the current taxon
 def generateMap(map_state,selection,query,text_field,map_field,map_image,background_image,render_map,map_label):
 	if map_state==1 and selection.get()!="Accession Number":
@@ -470,8 +471,8 @@ def generateMap(map_state,selection,query,text_field,map_field,map_image,backgro
 		
 		if map_path!="":
 			# set parameteres of text and map fields, set name of map label
-			text_field.config(width=100,height=44)
-			map_field.config(width=150,height=44,padx=40,border=2,relief="solid")
+			text_field.config(width=100,height=40)
+			map_field.config(width=150,height=40,padx=20,border=2,relief="solid")
 			map_label.config(text=f"Occurrence Map for {query.get()}:")
 			
 			# save png of occurrence map to variable
@@ -490,12 +491,11 @@ def generateMap(map_state,selection,query,text_field,map_field,map_image,backgro
 			text_field.insert(1.0,"No usage key available, map creation failed.")
 	elif map_state==0:
 		# set parameteres so that the map disappears again
-		text_field.config(width=250,height=44)
+		text_field.config(width=250,height=40)
 		map_field.config(width=0,height=0,border=0,relief="flat")
 		map_label.config(text="")
 		map_image.paste(background_image)
 		render_map.config(image="")
-
 
 #function for the checkbuttons in the Options column
 def optionsMenu(selectorframe):
@@ -518,7 +518,7 @@ def optionsMenu(selectorframe):
 	enable_maps.grid(row=3,column=3,padx=20,sticky="nw")
 	
 	# subtitle of column
-	tk.Label(selectorframe,text="*internet access required",font="Arial 12").grid(row=6,column=3,padx=20,sticky="nw")
+	tk.Label(selectorframe,text="*requires internet access",font="Arial 12").grid(row=6,column=3,padx=20,sticky="nw")
 	
 	# function for switching the map_state
 	def switch_map(event=None):
@@ -555,7 +555,7 @@ def optionsMenu(selectorframe):
 def main():
 	# set name of the program
 	program_title="CRYtabia"
-	program_version="0.5.1"
+	program_version="0.5.3"
 	
 	# make root window
 	window=tk.Tk()
@@ -593,7 +593,7 @@ def main():
 	
 	
 	# text field for output text
-	text_field=tk.Text(outputframe,width=250,height=44,state="disabled",border=2,relief="solid",font="Arial 13",cursor="cross")
+	text_field=tk.Text(outputframe,width=250,height=40,state="disabled",border=2,relief="solid",font="Arial 13",cursor="cross")
 	
 	# heading for the map
 	map_label=tk.Label(outputframe,text="",font="Arial 14")
@@ -632,16 +632,19 @@ def main():
 	text_field.grid(row=1,column=0,sticky="sn")
 	map_label.grid(row=0,column=1,sticky="s")
 	map_field.grid(row=1,column=1,sticky="sn")
-	render_map.pack(pady=75)
+	render_map.pack(pady=50)
 
 	
 	# make it so the input can be cofirmed by pressing return
 	window.bind("<Return>",lambda x: press_button.confirm())
 	# make it so that the content can be cleared by pressing escape
 	window.bind("<Escape>",lambda x: press_button.reset())
+	# make it so that all text is cleared by pressing command and backspace
+	window.bind("<Command-Key-BackSpace>",lambda x: press_button.clearText())
 	
 	# loop the main function while the window is open
 	window.mainloop()
+
 
 
 # run the main loop
