@@ -15,6 +15,7 @@ Comments are always above the commented line.
 
 #import tkinter for managing GUI
 import tkinter as tk
+#import image libraries for rendering images inside the GUI
 from PIL import Image, ImageTk
 
 # class for searching the input table
@@ -270,7 +271,7 @@ class Buttons:
 		setText(self.selection, self.query, self.text_field, self.text_label,gbif_state)
 		self.text_field.config(state="disabled")
 		
-		generateMap(map_state,self.selection,self.query,self.text_field,self.map_field,self.map_image,self.render_map,self.map_label)
+		generateMap(map_state,self.selection,self.query,self.text_field,self.map_field,self.map_image,self.background_image,self.render_map,self.map_label)
 
 
 # function for choosing the input method and getting the user input
@@ -423,33 +424,37 @@ def setText(selection,query,text_field,text_label,gbif_state):
 
 
 # function for generating a map png for the current taxon
-def generateMap(map_state,selection,query,text_field,map_field,map_image,render_map,map_label):
+def generateMap(map_state,selection,query,text_field,map_field,map_image,background_image,render_map,map_label):
 	if map_state==1 and selection.get()!="Accession Number":
 		search_map=SearchGBIF(query.get())
 		map_path=search_map.makeMap()
 		
 		if map_path!="":
+			# set parameteres of text and map fields, set name of map label
 			text_field.config(width=100,height=44)
 			map_field.config(width=150,height=44,padx=40,border=2,relief="solid")
 			map_label.config(text=f"Occurrence Map for {query.get()}:")
-			#map_image.config(file=map_path)
 			
+			# save png of occurrence map to variable
+			occurrence_map=Image.open(map_path)
+			# save png of world map to variable
+			world_map=Image.open("images/world_map.png")
+			# overlay the world map with the occurrence map
+			world_map.paste(occurrence_map, (-12,60), mask=occurrence_map)
 			
-			
-			img1=Image.open(map_path)
-			img2=Image.open("images/world_map.png")
-			img2.paste(img1, (-12,60), mask=img1)
-			
-			map_image.paste(img2)
+			# set the overlayed image to be rendered in window
+			map_image.paste(world_map)
 			render_map.config(image=map_image)
 			
 		else:
+			# insert error message
 			text_field.insert(1.0,"No usage key available, map creation failed.")
 	elif map_state==0:
+		# set parameteres so that the map disappears again
 		text_field.config(width=250,height=44)
 		map_field.config(width=0,height=0,border=0,relief="flat")
 		map_label.config(text="")
-		#map_image.config(file="")
+		map_image.paste(background_image)
 		render_map.config(image="")
 
 
@@ -495,7 +500,7 @@ def optionsMenu(selectorframe):
 def main():
 	# set name of the program
 	program_title="CRYtabia"
-	program_version="0.4.8"
+	program_version="0.4.9"
 	
 	# make root window
 	window=tk.Tk()
@@ -533,7 +538,7 @@ def main():
 	
 	
 	# text field for output text
-	text_field=tk.Text(outputframe,width=225,height=44,state="disabled",border=2,relief="solid",font="Arial 13",cursor="cross")
+	text_field=tk.Text(outputframe,width=250,height=44,state="disabled",border=2,relief="solid",font="Arial 13",cursor="cross")
 	
 	# heading for the map
 	map_label=tk.Label(outputframe,text="",font="Arial 14")
