@@ -17,6 +17,11 @@ Comments are always above the commented line.
 import tkinter as tk
 #import image libraries for rendering images inside the GUI
 from PIL import Image, ImageTk
+# import library for accessing the os
+import os
+
+# set script directory
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # class for searching the input table
 class SearchLibrary:
@@ -25,10 +30,9 @@ class SearchLibrary:
 		# import required packages
 		import pandas as pd
 		import os
-		# set script directory
-		script_directory = os.path.dirname(os.path.abspath(__file__))
+		
 		# set reference table
-		INPUT_TABLE = os.path.join(script_directory, "infolib.xlsx")
+		INPUT_TABLE = os.path.join(SCRIPT_DIR, "infolib.xlsx")
 		# get specific columns containing either taxonomic info or habitat info from reference table
 		self.TAXO_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="B:O")
 		self.HABITAT_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="B,K,P:S")
@@ -342,7 +346,7 @@ def getInput(selectorframe,chooselabel):
 def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 	sciName=""
 	sciNames=[]
-	search_table=SearchLibrary(query.get(),selection.get())
+	search_table=SearchLibrary(query.get().capitalize(),selection.get())
 	
 	# function for changing the output sentence on vernaculars depending on which are available
 	def vernacular_text(engName,gerName):
@@ -413,7 +417,7 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 		else:
 			# set main output text
 			main_text=[
-				f"\nScientific Name {query.get()} was not found in Table.\n",
+				f"\nNo information on {selection.get().lower()} {query.get()} available from reference table.\n",
 				f"{gbif_out}",
 				f"{wiki_out}",
 				"\n---------------------------------------------------"+"\n"
@@ -437,7 +441,7 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 		else:
 			# set main output text
 			main_text=[
-				f"\nTaxon Group {query.get()} was not found in Table.\n",
+				f"\nNo information on taxon group {query.get()} available from reference table.\n",
 				f"{gbif_out}",
 				f"{wiki_out}",
 				"\n---------------------------------------------------"+"\n"
@@ -473,7 +477,7 @@ def generateMap(map_state,selection,query,text_field,map_field,map_image,backgro
 			# save png of occurrence map to variable
 			occurrence_map=Image.open(map_path)
 			# save png of world map to variable
-			world_map=Image.open("images/world_map.png")
+			world_map=Image.open(SCRIPT_DIR+"/images/world_map.png")
 			# overlay the world map with the occurrence map
 			world_map.paste(occurrence_map, (-12,60), mask=occurrence_map)
 			
@@ -551,7 +555,7 @@ def optionsMenu(selectorframe):
 def main():
 	# set name of the program
 	program_title="CRYtabia"
-	program_version="0.5.0"
+	program_version="0.5.1"
 	
 	# make root window
 	window=tk.Tk()
@@ -600,7 +604,7 @@ def main():
 	render_map=tk.Label(map_field)
 
 	# empty PhotoImage to provide an image for the map
-	background_image=Image.open("images/transparent_background.png")
+	background_image=Image.open(SCRIPT_DIR+"/images/transparent_background.png")
 	map_image=ImageTk.PhotoImage(background_image)
 
 	
