@@ -19,6 +19,8 @@ import tkinter as tk
 from PIL import Image, ImageTk
 # import library for accessing the os
 import os
+# import library for internet connections
+import requests
 
 # get script directory
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -74,17 +76,28 @@ class SearchLibrary:
 		species_values = table.iloc[matched_lines,9].values
 		authority_values = table.iloc[matched_lines,10].values
 		taxgroup_values = table.iloc[matched_lines,13].values
-		engName_values = table.iloc[matched_lines,11].values
-		gerName_values = table.iloc[matched_lines,12].values
+		engName_values = table.iloc[matched_lines,11].values.tolist()
+		gerName_values = table.iloc[matched_lines,12].values.tolist()
 		taxpath_values = table.iloc[matched_lines,1:7].values
+		print(engName_values,gerName_values)
 		
 		# join the individual list elements into strings
 		species_str = ''.join(map(str, species_values[0]))
 		authority_str = ''.join(map(str, authority_values[0]))
 		taxgroup_str = ''.join(map(str, taxgroup_values[0]))
 		taxpath_str = ' > '.join(map(str, taxpath_values[0].flatten()))
-		engName_str = ''.join(map(str, engName_values[0]))
-		gerName_str = ''.join(map(str, gerName_values[0]))
+		
+		# check length of english name value list to get only one value
+		if len(engName_values)>1:
+			engName_str = ''.join(map(str, engName_values[0]))
+		else:
+			engName_str = ''.join(map(str, engName_values))
+		
+		# check length of german name value list to get only one value
+		if len(gerName_values)>1:
+			gerName_str = ''.join(map(str, gerName_values[0]))
+		else:
+			gerName_str = ''.join(map(str, gerName_values))
 
 		return species_str,authority_str,taxpath_str,taxgroup_str,engName_str,gerName_str,acc_values
 	
@@ -299,6 +312,13 @@ class Buttons:
 		
 		generateMap(map_state,self.selection,self.query,self.text_field,self.map_field,self.map_image,self.background_image,self.render_map,self.map_label)
 
+# function for checking connection to the internet
+def internetConnection():
+	try:
+		requests.get("https://api.gbif.org/", timeout=5)
+		return True
+	except requests.ConnectionError:
+		return False
 
 # function for choosing the input method and getting the user input
 def getInput(selectorframe,chooselabel):
@@ -363,25 +383,31 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 		
 		return text_out
 	
-	# if GBIF Search is enabled, output search results
-	if gbif_state==1 and selection.get()!="Accession Number":
-		gbif_search=SearchGBIF((query.get()))
-		gbif_results=gbif_search.getTaxpath()
-		gbif_out=f"\nInformation from GBIF backbone:\n{gbif_results}\n"
-	elif gbif_state==1 and selection.get()=="Accession Number":
-		gbif_out="\nNo GBIF information available for Accession Numbers.\n"
+	# if GBIF search is enabled and an internet connection is available, output search results
+	if gbif_state==1 and internetConnection()==True:
+		if selection.get()!="Accession Number":
+			gbif_search=SearchGBIF((query.get()))
+			gbif_results=gbif_search.getTaxpath()
+			gbif_out=f"\nInformation from GBIF backbone:\n{gbif_results}\n"
+		elif selection.get()=="Accession Number":
+			gbif_out="\nNo GBIF information available for Accession Numbers.\n"
+	elif gbif_state==1 and internetConnection()==False:
+		gbif_out="\nNo internet connection available, GBIF search impossible.\n"
 	elif gbif_state==0:
 		gbif_out=""
 	
-	if wiki_state==1 and selection.get()!="Accession Number":
-		wiki_search=SearchWikipedia(query.get())
-		wiki_summary=wiki_search.get_summary()
-		wiki_out=f"\nInformation from Wikipedia page:\n{wiki_summary}\n"
-	elif wiki_state==1 and selection.get()=="Accession Number":
-		wiki_out="\nNo Wikipedia information for Accession Numbers.\n"
+	# if Wikipedia search is enabled and an internet connection is available, output page summary
+	if wiki_state==1 and internetConnection()==True:
+		if selection.get()!="Accession Number":
+			wiki_search=SearchWikipedia(query.get())
+			wiki_summary=wiki_search.get_summary()
+			wiki_out=f"\nInformation from Wikipedia page:\n{wiki_summary}\n"
+		elif selection.get()=="Accession Number":
+			wiki_out="\nNo Wikipedia information for Accession Numbers.\n"
+	elif wiki_state==1 and internetConnection()==False:
+		wiki_out="\nNo internet connection available, Wikipedia search impossible.\n"
 	elif wiki_state==0:
 		wiki_out=""
-		
 	
 	# check for input of radio buttons
 	if selection.get()!="Taxon Group" and query.get()!="":
@@ -465,30 +491,36 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 
 # function for generating a map png for the current taxon
 def generateMap(map_state,selection,query,text_field,map_field,map_image,background_image,render_map,map_label):
+	
 	if map_state==1 and selection.get()!="Accession Number":
-		search_map=SearchGBIF(query.get())
-		map_path=search_map.makeMap()
-		
-		if map_path!="":
-			# set parameteres of text and map fields, set name of map label
-			text_field.config(width=100,height=40)
-			map_field.config(width=150,height=40,padx=20,border=2,relief="solid")
-			map_label.config(text=f"Occurrence Map for {query.get()}:")
+		# check for internet connection
+		if internetConnection():
+			search_map=SearchGBIF(query.get())
+			map_path=search_map.makeMap()
 			
-			# save png of occurrence map to variable
-			occurrence_map=Image.open(map_path)
-			# save png of world map to variable
-			world_map=Image.open(SCRIPT_DIR+"/images/world_map.png")
-			# overlay the world map with the occurrence map
-			world_map.paste(occurrence_map, (-12,60), mask=occurrence_map)
-			
-			# set the overlayed image to be rendered in window
-			map_image.paste(world_map)
-			render_map.config(image=map_image)
-			
+			if map_path!="":
+				# set parameteres of text and map fields, set name of map label
+				text_field.config(width=100,height=40)
+				map_field.config(width=150,height=40,padx=20,border=2,relief="solid")
+				map_label.config(text=f"Occurrence Map for {query.get()}:")
+				
+				# save png of occurrence map to variable
+				occurrence_map=Image.open(map_path)
+				# save png of world map to variable
+				world_map=Image.open(SCRIPT_DIR+"/images/world_map.png")
+				# overlay the world map with the occurrence map
+				world_map.paste(occurrence_map, (-12,60), mask=occurrence_map)
+				
+				# set the overlayed image to be rendered in window
+				map_image.paste(world_map)
+				render_map.config(image=map_image)
+				
+			else:
+				# insert error message
+				text_field.insert(1.0,"\nNo usage key available, map creation failed.\n")
 		else:
-			# insert error message
-			text_field.insert(1.0,"No usage key available, map creation failed.")
+			text_field.insert(1.0,"\nNo internet connection available, map creation impossible.\n")
+			map_image.paste(background_image)
 	elif map_state==0:
 		# set parameteres so that the map disappears again
 		text_field.config(width=250,height=40)
@@ -555,7 +587,7 @@ def optionsMenu(selectorframe):
 def main():
 	# set name of the program
 	program_title="CRYtabia"
-	program_version="0.5.3"
+	program_version="0.5.4"
 	
 	# make root window
 	window=tk.Tk()
