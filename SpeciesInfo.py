@@ -12,7 +12,6 @@ Comments are always above the commented line.
 """
 
 
-
 #import tkinter for managing GUI
 import tkinter as tk
 #import image libraries for rendering images inside the GUI
@@ -24,6 +23,7 @@ import requests
 
 # get script directory
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 # class for searching the input table
 class SearchLibrary:
@@ -43,7 +43,7 @@ class SearchLibrary:
 		self.selection=selection
 	
 	# function for checking whether the query is available in the table or not
-	def is_in_table(self):
+	def inTable(self):
 		table=self.TAXO_LIBRARY
 		
 		if self.selection=="Accession Number":
@@ -59,8 +59,8 @@ class SearchLibrary:
 		else:
 			return False
 	
-	# function for retrieving taxonomic information from the table
-	def get_info_from_table(self):
+	# function for retrieving taxonomic information for one species from the table
+	def getSpeciesInfo(self):
 		table=self.TAXO_LIBRARY
 		
 		if self.selection=="Accession Number":
@@ -79,7 +79,6 @@ class SearchLibrary:
 		engName_values = table.iloc[matched_lines,11].values.tolist()
 		gerName_values = table.iloc[matched_lines,12].values.tolist()
 		taxpath_values = table.iloc[matched_lines,1:7].values
-		print(engName_values,gerName_values)
 		
 		# join the individual list elements into strings
 		species_str = ''.join(map(str, species_values[0]))
@@ -102,7 +101,7 @@ class SearchLibrary:
 		return species_str,authority_str,taxpath_str,taxgroup_str,engName_str,gerName_str,acc_values
 	
 	# function for matching a given accession number with the reference table and returning extracted habitat information
-	def get_habitat_from_table(self):
+	def getHabitat(self):
 		table=self.HABITAT_LIBRARY
 		out_list=[]
 		
@@ -142,12 +141,11 @@ class SearchLibrary:
 			return ""
 	
 	# function for matching a given taxon group with the reference table and returning the species belonging to that taxon
-	def get_info_by_taxon_group(self):
+	def getTaxgroupInfo(self):
 		table=self.TAXO_LIBRARY
 		taxGroup=self.query
 		
-		matched_lines_taxgroup=table[table[table.columns[13]] == taxGroup].index.tolist()
-		if matched_lines_taxgroup!=[]: matched_title=table.columns[13]
+		
 		matched_lines_kingdom=table[table[table.columns[1]] == taxGroup].index.tolist()
 		if matched_lines_kingdom!=[]: matched_title=table.columns[1]
 		matched_lines_phylum=table[table[table.columns[2]] == taxGroup].index.tolist()
@@ -160,6 +158,9 @@ class SearchLibrary:
 		if matched_lines_family!=[]: matched_title=table.columns[5]
 		matched_lines_genus=table[table[table.columns[6]] == taxGroup].index.tolist()
 		if matched_lines_genus!=[]: matched_title=table.columns[6]
+		# searches for taxGroup. Does not work for some reason
+		matched_lines_taxgroup=table[table[table.columns[13]] == taxGroup].index.tolist()
+		if matched_lines_taxgroup!=[]: matched_title=table.columns[13]
 	
 		matched_lines = matched_lines_taxgroup+matched_lines_kingdom+matched_lines_phylum+matched_lines_class+matched_lines_order+matched_lines_family+matched_lines_genus
 		
@@ -170,7 +171,6 @@ class SearchLibrary:
 			return sciNames,matched_title
 		else:
 			return [],""
-
 
 # class for searching the GBIF (Global Biodiversity Information Facility, https://gbif.org) Database
 class SearchGBIF:
@@ -241,12 +241,12 @@ class SearchWikipedia:
 		self.wiki_en=wiki.Wikipedia('CryptochromeCoSegregation (ronja.roesner@uni-oldenburg.de','en')
 		self.sciName=sciName
 	
-	
-	
-	def get_summary(self):
+	def getSummary(self):
+		wiki_query=f"{self.sciName}"
+		wiki_page=self.wiki_en.page(wiki_query)
 		
-		if self.wiki_en.page(self.sciName).exists():
-			summary=self.wiki_en.page(self.sciName).summary
+		if wiki_page.exists():
+			summary=wiki_page.summary
 		else:
 			summary="Wikpedia page does not exist."
 		
@@ -312,7 +312,8 @@ class Buttons:
 		
 		generateMap(map_state,self.selection,self.query,self.text_field,self.map_field,self.map_image,self.background_image,self.render_map,self.map_label)
 
-# function for checking connection to the internet
+
+# function for checking if the user is connected to the internet
 def internetConnection():
 	try:
 		requests.get("https://api.gbif.org/", timeout=5)
@@ -368,6 +369,7 @@ def getInput(selectorframe,chooselabel):
 def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 	sciName=""
 	sciNames=[]
+	# create an object for the table search class
 	search_table=SearchLibrary(query.get().capitalize(),selection.get())
 	
 	# function for changing the output sentence on vernaculars depending on which are available
@@ -400,7 +402,7 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 	if wiki_state==1 and internetConnection()==True:
 		if selection.get()!="Accession Number":
 			wiki_search=SearchWikipedia(query.get())
-			wiki_summary=wiki_search.get_summary()
+			wiki_summary=wiki_search.getSummary()
 			wiki_out=f"\nInformation from Wikipedia page:\n{wiki_summary}\n"
 		elif selection.get()=="Accession Number":
 			wiki_out="\nNo Wikipedia information for Accession Numbers.\n"
@@ -410,15 +412,15 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 		wiki_out=""
 	
 	# check for input of radio buttons
-	if selection.get()!="Taxon Group" and query.get()!="":
+	if selection.get()!="Taxon Group":
 		# check if species is available in reference table
-		inTable=search_table.is_in_table()
+		is_in_table=search_table.inTable()
 		
-		if inTable==True:
+		if is_in_table:
 			# get taxonomic information
-			sciName,authority,taxPath,taxGroup,engName,gerName,accList=search_table.get_info_from_table()
+			sciName,authority,taxPath,taxGroup,engName,gerName,accList=search_table.getSpeciesInfo()
 			# get habitats the species lives in
-			habitats=search_table.get_habitat_from_table()
+			habitats=search_table.getHabitat()
 			
 			# combine available accession numbers into string
 			if selection.get()=="Accession Number":
@@ -451,9 +453,9 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 				"\n---------------------------------------------------"+"\n"
 				]
 	
-	elif selection.get()=="Taxon Group" and query.get()!="":
+	elif selection.get()=="Taxon Group":
 		# get scientific names and name of taxon group
-		sciNames,col_title=search_table.get_info_by_taxon_group()
+		sciNames,col_title=search_table.getTaxgroupInfo()
 		# get the number of species belonging to the taxon
 		speciescount=len(sciNames)
 		
@@ -514,6 +516,8 @@ def generateMap(map_state,selection,query,text_field,map_field,map_image,backgro
 				# set the overlayed image to be rendered in window
 				map_image.paste(world_map)
 				render_map.config(image=map_image)
+				occurrence_map.close()
+				world_map.close()
 				
 			else:
 				# insert error message
@@ -587,7 +591,7 @@ def optionsMenu(selectorframe):
 def main():
 	# set name of the program
 	program_title="CRYtabia"
-	program_version="0.5.4"
+	program_version="0.5.5"
 	
 	# make root window
 	window=tk.Tk()
@@ -665,7 +669,6 @@ def main():
 	map_label.grid(row=0,column=1,sticky="s")
 	map_field.grid(row=1,column=1,sticky="sn")
 	render_map.pack(pady=50)
-
 	
 	# make it so the input can be cofirmed by pressing return
 	window.bind("<Return>",lambda x: press_button.confirm())
@@ -673,6 +676,7 @@ def main():
 	window.bind("<Escape>",lambda x: press_button.reset())
 	# make it so that all text is cleared by pressing command and backspace
 	window.bind("<Command-Key-BackSpace>",lambda x: press_button.clearText())
+	
 	
 	# loop the main function while the window is open
 	window.mainloop()
