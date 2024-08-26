@@ -36,8 +36,9 @@ class SearchLibrary:
 		# set reference table
 		INPUT_TABLE = os.path.join(SCRIPT_DIR, "infolib.xlsx")
 		# get specific columns containing either taxonomic info or habitat info from reference table
-		self.TAXO_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="B:O")
-		self.HABITAT_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="B,K,P:S")
+		self.TAXO_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="A:O")
+		
+		self.HABITAT_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="A,B,K,P:S")
 		
 		self.query=query
 		self.selection=selection
@@ -48,11 +49,15 @@ class SearchLibrary:
 		
 		if self.selection=="Accession Number":
 			# search for accession number in table
-			matched_lines = table[table[table.columns[0]] == self.query].index.tolist()
+			matched_lines = table[table[table.columns[1]] == self.query].index.tolist()
+			
+		elif self.selection=="Genome Index":
+			# search for Genome Index in table. Data type set to int, important!
+			matched_lines = table[table[table.columns[0]] == int(self.query)].index.tolist()
 			
 		elif self.selection=="Scientific Name":
 			# search for the scientific name in the table
-			matched_lines = table[table[table.columns[9]] == self.query].index.tolist()
+			matched_lines = table[table[table.columns[10]] == self.query].index.tolist()
 		
 		if matched_lines!=[]:
 			return True
@@ -65,20 +70,24 @@ class SearchLibrary:
 		
 		if self.selection=="Accession Number":
 			# search for accession number in table
-			matched_lines = table[table[table.columns[0]] == self.query].index.tolist()
-			
+			matched_lines = table[table[table.columns[1]] == self.query].index.tolist()
+		
+		elif self.selection=="Genome Index":
+			# search for Genome Index in table. Data type set to int, important!
+			matched_lines = table[table[table.columns[0]] == int(self.query)].index.tolist()
+		
 		elif self.selection=="Scientific Name":
 			# search for the scientific name in the table
-			matched_lines = table[table[table.columns[9]] == self.query].index.tolist()
+			matched_lines = table[table[table.columns[10]] == self.query].index.tolist()
 		
 		# save the species and taxon group to list variables
-		acc_values=table.iloc[matched_lines,0].values.tolist()
-		species_values = table.iloc[matched_lines,9].values
-		authority_values = table.iloc[matched_lines,10].values
-		taxgroup_values = table.iloc[matched_lines,13].values
-		engName_values = table.iloc[matched_lines,11].values.tolist()
-		gerName_values = table.iloc[matched_lines,12].values.tolist()
-		taxpath_values = table.iloc[matched_lines,1:7].values
+		acc_values=table.iloc[matched_lines,1].values.tolist()
+		species_values = table.iloc[matched_lines,10].values
+		authority_values = table.iloc[matched_lines,11].values
+		taxgroup_values = table.iloc[matched_lines,14].values
+		engName_values = table.iloc[matched_lines,12].values.tolist()
+		gerName_values = table.iloc[matched_lines,13].values.tolist()
+		taxpath_values = table.iloc[matched_lines,2:8].values
 		
 		# join the individual list elements into strings
 		species_str = ''.join(map(str, species_values[0]))
@@ -107,27 +116,31 @@ class SearchLibrary:
 		
 		if self.selection=="Accession Number":
 			# search for accession number in table
-			matched_lines = table[table[table.columns[0]] == self.query].index.tolist()
-			
+			matched_lines = table[table[table.columns[1]] == self.query].index.tolist()
+		
+		elif self.selection=="Genome Index":
+			# search for Genome Index in table. Data type set to int, important!
+			matched_lines = table[table[table.columns[0]] == int(self.query)].index.tolist()
+		
 		elif self.selection=="Scientific Name":
 			# search for the scientific name in the table
-			matched_lines = table[table[table.columns[1]] == self.query].index.tolist()
+			matched_lines = table[table[table.columns[2]] == self.query].index.tolist()
 		
 		if matched_lines!=[]:
 			# check if habitat is marine
-			if table.iloc[matched_lines,2].values.size>0:
+			if table.iloc[matched_lines,3].values.size>0:
 				out_list.append("marine")
 			
 			# check if habitat is brackish
-			if table.iloc[matched_lines,3].values.size>0:
+			if table.iloc[matched_lines,4].values.size>0:
 				out_list.append("brackish")
 			
 			# check if habitat is fresh
-			if table.iloc[matched_lines,4].values.size>0:
+			if table.iloc[matched_lines,5].values.size>0:
 				out_list.append("freshwater")
 			
 			# check if habitat is terrestrial
-			if table.iloc[matched_lines,5].values.size>0:
+			if table.iloc[matched_lines,6].values.size>0:
 				out_list.append("terrestrial")
 			
 			# make the output string
@@ -146,26 +159,26 @@ class SearchLibrary:
 		taxGroup=self.query
 		
 		
-		matched_lines_kingdom=table[table[table.columns[1]] == taxGroup].index.tolist()
-		if matched_lines_kingdom!=[]: matched_title=table.columns[1]
-		matched_lines_phylum=table[table[table.columns[2]] == taxGroup].index.tolist()
-		if matched_lines_phylum!=[]: matched_title=table.columns[2]
-		matched_lines_class=table[table[table.columns[3]] == taxGroup].index.tolist()
-		if matched_lines_class!=[]: matched_title=table.columns[3]
-		matched_lines_order=table[table[table.columns[4]] == taxGroup].index.tolist()
-		if matched_lines_order!=[]: matched_title=table.columns[4]
-		matched_lines_family=table[table[table.columns[5]] == taxGroup].index.tolist()
-		if matched_lines_family!=[]: matched_title=table.columns[5]
-		matched_lines_genus=table[table[table.columns[6]] == taxGroup].index.tolist()
-		if matched_lines_genus!=[]: matched_title=table.columns[6]
+		matched_lines_kingdom=table[table[table.columns[2]] == taxGroup].index.tolist()
+		if matched_lines_kingdom!=[]: matched_title=table.columns[2]
+		matched_lines_phylum=table[table[table.columns[3]] == taxGroup].index.tolist()
+		if matched_lines_phylum!=[]: matched_title=table.columns[3]
+		matched_lines_class=table[table[table.columns[4]] == taxGroup].index.tolist()
+		if matched_lines_class!=[]: matched_title=table.columns[4]
+		matched_lines_order=table[table[table.columns[5]] == taxGroup].index.tolist()
+		if matched_lines_order!=[]: matched_title=table.columns[5]
+		matched_lines_family=table[table[table.columns[6]] == taxGroup].index.tolist()
+		if matched_lines_family!=[]: matched_title=table.columns[6]
+		matched_lines_genus=table[table[table.columns[7]] == taxGroup].index.tolist()
+		if matched_lines_genus!=[]: matched_title=table.columns[7]
 		# searches for taxGroup. Does not work for some reason
-		matched_lines_taxgroup=table[table[table.columns[13]] == taxGroup].index.tolist()
-		if matched_lines_taxgroup!=[]: matched_title=table.columns[13]
+		matched_lines_taxgroup=table[table[table.columns[14]] == taxGroup].index.tolist()
+		if matched_lines_taxgroup!=[]: matched_title=table.columns[14]
 	
 		matched_lines = matched_lines_taxgroup+matched_lines_kingdom+matched_lines_phylum+matched_lines_class+matched_lines_order+matched_lines_family+matched_lines_genus
 		
 		if matched_lines!=[]:
-			sciNames=table.iloc[matched_lines,9].values.tolist()
+			sciNames=table.iloc[matched_lines,10].values.tolist()
 			sciNames = list(set(sciNames))
 			
 			return sciNames,matched_title
@@ -337,19 +350,29 @@ def getInput(selectorframe,chooselabel):
 	
 	# function for when the radiobuttons change
 	def clicked():
-		chooselabel.config(text=f"Input {selector.get()}")
+		if selector.get()=="Genome Index":
+			chooselabel.config(text="Input Genome Index (0-379)")
+		else:
+			chooselabel.config(text=f"Input {selector.get()}")
+		
+		
 	
 	# set radiobuttons and render them into the selection grid
 	option_accNumber=tk.Radiobutton(selectorframe,text="Accession Number",variable=selector,value="Accession Number",cursor="circle",command=lambda:clicked())
 	option_accNumber.grid(row=1,column=0,padx=20,sticky="nw")
+	option_speciesID=tk.Radiobutton(selectorframe,text="Genome Index",variable=selector,value="Genome Index",cursor="circle",command=lambda:clicked())
+	option_speciesID.grid(row=2,column=0,padx=20,sticky="nw")
 	option_sciName=tk.Radiobutton(selectorframe,text="Scientific Name",variable=selector,value="Scientific Name",cursor="circle",command=lambda:clicked())
-	option_sciName.grid(row=2,column=0,padx=20,sticky="nw")
+	option_sciName.grid(row=3,column=0,padx=20,sticky="nw")
 	option_taxGroup=tk.Radiobutton(selectorframe,text="Taxon Group",variable=selector,value="Taxon Group",cursor="circle",command=lambda:clicked())
-	option_taxGroup.grid(row=3,column=0,padx=20,sticky="nw")
+	option_taxGroup.grid(row=4,column=0,padx=20,sticky="nw")
 	
 	# functions for binding keyboard shortcuts
 	def select_option_accNumber(event=None):
 		selector.set("Accession Number")
+		clicked()
+	def select_option_speciesID(event=None):
+		selector.set("Genome Index")
 		clicked()
 	def select_option_sciName(event=None):
 		selector.set("Scientific Name")
@@ -360,8 +383,10 @@ def getInput(selectorframe,chooselabel):
 	
 	# bind keyboard shortcuts for switching between radiobuttons
 	selectorframe.bind_all("<Command-Key-1>", select_option_accNumber)
-	selectorframe.bind_all("<Command-Key-2>", select_option_sciName)
-	selectorframe.bind_all("<Command-Key-3>", select_option_taxGroup)
+	selectorframe.bind_all("<Command-Key-2>", select_option_speciesID)
+	selectorframe.bind_all("<Command-Key-3>", select_option_sciName)
+	selectorframe.bind_all("<Command-Key-4>", select_option_taxGroup)
+	
 	
 	return selector
 
@@ -387,12 +412,12 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 	
 	# if GBIF search is enabled and an internet connection is available, output search results
 	if gbif_state==1 and internetConnection()==True:
-		if selection.get()!="Accession Number":
+		if selection.get()!="Accession Number" and selection.get()!="Genome Index":
 			gbif_search=SearchGBIF((query.get()))
 			gbif_results=gbif_search.getTaxpath()
 			gbif_out=f"\nInformation from GBIF backbone:\n{gbif_results}\n"
-		elif selection.get()=="Accession Number":
-			gbif_out="\nNo GBIF information available for Accession Numbers.\n"
+		elif selection.get()=="Accession Number" or selection.get()=="Genome Index":
+			gbif_out=f"\nNo GBIF information available for {selection.get()}s.\n"
 	elif gbif_state==1 and internetConnection()==False:
 		gbif_out="\nNo internet connection available, GBIF search impossible.\n"
 	elif gbif_state==0:
@@ -400,12 +425,12 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 	
 	# if Wikipedia search is enabled and an internet connection is available, output page summary
 	if wiki_state==1 and internetConnection()==True:
-		if selection.get()!="Accession Number":
+		if selection.get()!="Accession Number" and selection.get()!="Genome Index":
 			wiki_search=SearchWikipedia(query.get())
 			wiki_summary=wiki_search.getSummary()
 			wiki_out=f"\nInformation from Wikipedia page:\n{wiki_summary}\n"
-		elif selection.get()=="Accession Number":
-			wiki_out="\nNo Wikipedia information for Accession Numbers.\n"
+		elif selection.get()=="Accession Number" or selection.get()=="Genome Index":
+			wiki_out=f"\nNo Wikipedia information for {selection.get()}s.\n"
 	elif wiki_state==1 and internetConnection()==False:
 		wiki_out="\nNo internet connection available, Wikipedia search impossible.\n"
 	elif wiki_state==0:
@@ -425,10 +450,12 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 			# combine available accession numbers into string
 			if selection.get()=="Accession Number":
 				acc_text=""
-			elif selection.get()=="Scientific Name" and len(accList)==1:
-				acc_text=f"One available Accession Number, {accList[0]}.\n\n"
-			elif selection.get()=="Scientific Name" and len(accList)>1:
-				acc_text=f"Available Accession Number are {', '.join(accList)}.\n\n"
+			elif selection.get()=="Genome Index":
+				acc_text=f"Accession Number for this index is {accList[0]}\n\n"
+			elif selection.get()!="Accession Number" and len(accList)==1:
+				acc_text=f"One available Accession Number, {accList[0]}\n\n"
+			elif selection.get()!="Accession Number" and len(accList)>1:
+				acc_text=f"Available Accession Number are {', '.join(accList)}\n\n"
 			
 			# get vernacular name string
 			vern_text=vernacular_text(engName, gerName)
@@ -488,13 +515,13 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 		text_label.config(text=f"No {selection.get()} given")
 		text_field.insert(1.0,''.join(none_text))
 	else:
-		text_label.config(text=f"Available information on {query.get()}:")
+		text_label.config(text=f"Available information on {selection.get()} {query.get()}:")
 		text_field.insert(1.0,''.join(main_text))
 
 # function for generating a map png for the current taxon
 def generateMap(map_state,selection,query,text_field,map_field,map_image,background_image,render_map,map_label):
 	
-	if map_state==1 and selection.get()!="Accession Number":
+	if map_state==1 and selection.get()!="Accession Number" and selection.get()!="Genome Index":
 		# check for internet connection
 		if internetConnection():
 			search_map=SearchGBIF(query.get())
@@ -554,33 +581,33 @@ def optionsMenu(selectorframe):
 	enable_maps.grid(row=3,column=3,padx=20,sticky="nw")
 	
 	# subtitle of column
-	tk.Label(selectorframe,text="*requires internet access",font="Arial 12").grid(row=6,column=3,padx=20,sticky="nw")
+	tk.Label(selectorframe,text="*requires internet access",font="Arial 12").grid(row=4,column=3,padx=20,sticky="nw")
 	
 	# function for switching the map_state
-	def switch_map(event=None):
+	def switchMap(event=None):
 		if map_onoff.get()==1:
 			map_onoff.set(0)
 		elif map_onoff.get()==0:
 			map_onoff.set(1)
 	
 	# function for switching the wiki_state
-	def switch_wiki(event=None):
+	def switchWiki(event=None):
 		if wiki_onoff.get()==1:
 			wiki_onoff.set(0)
 		elif wiki_onoff.get()==0:
 			wiki_onoff.set(1)
 	
 	# function for switching the gbif_state
-	def switch_gbif(event=None):
+	def switchGBIF(event=None):
 		if gbif_onoff.get()==1:
 			gbif_onoff.set(0)
 		elif gbif_onoff.get()==0:
 			gbif_onoff.set(1)
 	
 	# keybindings for map and gbif search switching
-	selectorframe.bind_all("<Command-Key-l>", switch_map)
-	selectorframe.bind_all("<Command-Key-k>",switch_wiki)
-	selectorframe.bind_all("<Command-Key-j>",switch_gbif)
+	selectorframe.bind_all("<Command-Key-l>", switchMap)
+	selectorframe.bind_all("<Command-Key-k>", switchWiki)
+	selectorframe.bind_all("<Command-Key-j>", switchGBIF)
 	
 	
 	return gbif_onoff,wiki_onoff,map_onoff
@@ -591,7 +618,7 @@ def optionsMenu(selectorframe):
 def main():
 	# set name of the program
 	program_title="CRYtabia"
-	program_version="0.5.5"
+	program_version="0.6.0"
 	
 	# make root window
 	window=tk.Tk()
