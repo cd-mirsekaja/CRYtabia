@@ -48,8 +48,8 @@ class SearchLibrary:
 		table=self.TAXO_LIBRARY
 		
 		if self.selection=="Accession Number":
-			# search for accession number in table
-			matched_lines = table[table[table.columns[1]] == self.query].index.tolist()
+			# search for accession number in table. Needs to get transformed to upper case.
+			matched_lines = table[table[table.columns[1]] == self.query.upper()].index.tolist()
 			
 		elif self.selection=="Genome Index":
 			# search for Genome Index in table. Data type set to int, important!
@@ -69,8 +69,8 @@ class SearchLibrary:
 		table=self.TAXO_LIBRARY
 		
 		if self.selection=="Accession Number":
-			# search for accession number in table
-			matched_lines = table[table[table.columns[1]] == self.query].index.tolist()
+			# search for accession number in table. Needs to get transformed to upper case.
+			matched_lines = table[table[table.columns[1]] == self.query.upper()].index.tolist()
 		
 		elif self.selection=="Genome Index":
 			# search for Genome Index in table. Data type set to int, important!
@@ -115,8 +115,8 @@ class SearchLibrary:
 		out_list=[]
 		
 		if self.selection=="Accession Number":
-			# search for accession number in table
-			matched_lines = table[table[table.columns[1]] == self.query].index.tolist()
+			# search for accession number in table Needs to get transformed to upper case.
+			matched_lines = table[table[table.columns[1]] == self.query.upper()].index.tolist()
 		
 		elif self.selection=="Genome Index":
 			# search for Genome Index in table. Data type set to int, important!
@@ -618,7 +618,7 @@ def optionsMenu(selectorframe):
 def main():
 	# set name of the program
 	program_title="CRYtabia"
-	program_version="0.6.0"
+	program_version="0.6.1"
 	
 	# make root window
 	window=tk.Tk()
@@ -713,6 +713,7 @@ def main():
 # run the main loop
 if __name__ == "__main__":
 	main()
+
 
 
 
