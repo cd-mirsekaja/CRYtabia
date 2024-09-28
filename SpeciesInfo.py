@@ -48,7 +48,7 @@ class SearchLibrary:
 		table=self.TAXO_LIBRARY
 		
 		if self.selection=="Accession Number":
-			# search for accession number in table. Needs to get transformed to upper case.
+			# search for accession number in table. Input needs to get transformed to upper case.
 			matched_lines = table[table[table.columns[1]] == self.query.upper()].index.tolist()
 			
 		elif self.selection=="Genome Index":
@@ -69,7 +69,7 @@ class SearchLibrary:
 		table=self.TAXO_LIBRARY
 		
 		if self.selection=="Accession Number":
-			# search for accession number in table. Needs to get transformed to upper case.
+			# search for accession number in table. Input needs to get transformed to upper case.
 			matched_lines = table[table[table.columns[1]] == self.query.upper()].index.tolist()
 		
 		elif self.selection=="Genome Index":
@@ -88,6 +88,7 @@ class SearchLibrary:
 		engName_values = table.iloc[matched_lines,12].values.tolist()
 		gerName_values = table.iloc[matched_lines,13].values.tolist()
 		taxpath_values = table.iloc[matched_lines,2:8].values
+		index_values = table.iloc[matched_lines,0].values.tolist()
 		
 		# join the individual list elements into strings
 		species_str = ''.join(map(str, species_values[0]))
@@ -107,7 +108,7 @@ class SearchLibrary:
 		else:
 			gerName_str = ''.join(map(str, gerName_values))
 
-		return species_str,authority_str,taxpath_str,taxgroup_str,engName_str,gerName_str,acc_values
+		return species_str,authority_str,taxpath_str,taxgroup_str,engName_str,gerName_str,acc_values,index_values
 	
 	# function for matching a given accession number with the reference table and returning extracted habitat information
 	def getHabitat(self):
@@ -115,7 +116,7 @@ class SearchLibrary:
 		out_list=[]
 		
 		if self.selection=="Accession Number":
-			# search for accession number in table Needs to get transformed to upper case.
+			# search for accession number in table. Input needs to get transformed to upper case.
 			matched_lines = table[table[table.columns[1]] == self.query.upper()].index.tolist()
 		
 		elif self.selection=="Genome Index":
@@ -443,7 +444,7 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 		
 		if is_in_table:
 			# get taxonomic information
-			sciName,authority,taxPath,taxGroup,engName,gerName,accList=search_table.getSpeciesInfo()
+			sciName,authority,taxPath,taxGroup,engName,gerName,accList,indexList=search_table.getSpeciesInfo()
 			# get habitats the species lives in
 			habitats=search_table.getHabitat()
 			
@@ -453,14 +454,15 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 			elif selection.get()=="Genome Index":
 				acc_text=f"Accession Number for this index is {accList[0]}\n\n"
 			elif selection.get()!="Accession Number" and len(accList)==1:
-				acc_text=f"One available Accession Number, {accList[0]}\n\n"
+				acc_text=f"One available Accession Number, {accList[0]} with Index {indexList[0]}\n\n"
 			elif selection.get()!="Accession Number" and len(accList)>1:
-				acc_text=f"Available Accession Number are {', '.join(accList)}\n\n"
+				acc_text=f"Available Accession Number are {', '.join(accList)}\nAvailable Indices are {indexList}\n"
 			
 			# get vernacular name string
 			vern_text=vernacular_text(engName, gerName)
 			# set main output text
 			main_text=[
+				f"\n=== Info for {selection.get().lower()} {query.get()} ===\n"
 				f"\n{sciName} {authority} belongs to the {taxGroup}.\n",
 				vern_text+"\n",
 				f"\nThe Species is known to live in {habitats} habitats.\n\n",
@@ -469,7 +471,7 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 				f"{taxPath}\n",
 				f"{gbif_out}",
 				f"{wiki_out}",
-				"\n---------------------------------------------------"+"\n"
+				"\n-------------------------------------------------------------"+"\n"
 				]
 		else:
 			# set main output text
@@ -477,7 +479,7 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 				f"\nNo information on {selection.get().lower()} {query.get()} available from reference table.\n",
 				f"{gbif_out}",
 				f"{wiki_out}",
-				"\n---------------------------------------------------"+"\n"
+				"\n-------------------------------------------------------------"+"\n"
 				]
 	
 	elif selection.get()=="Taxon Group":
@@ -493,7 +495,7 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 				f"{', '.join(sciNames)}\n",
 				f"{gbif_out}",
 				f"{wiki_out}",
-				"\n---------------------------------------------------"+"\n"
+				"\n-------------------------------------------------------------"+"\n"
 				]
 		else:
 			# set main output text
@@ -501,13 +503,13 @@ def setText(selection,query,text_field,text_label,gbif_state,wiki_state):
 				f"\nNo information on taxon group {query.get()} available from reference table.\n",
 				f"{gbif_out}",
 				f"{wiki_out}",
-				"\n---------------------------------------------------"+"\n"
+				"\n-------------------------------------------------------------"+"\n"
 				]
 
 	# set text for when no input was given
 	none_text=[
 		"\nPlease enter something.\n"
-		"\n---------------------------------------------------"+"\n"
+		"\n-------------------------------------------------------------"+"\n"
 		]
 	
 	# check if an input was given and modifify text field accordingly
@@ -618,7 +620,7 @@ def optionsMenu(selectorframe):
 def main():
 	# set name of the program
 	program_title="CRYtabia"
-	program_version="0.6.1"
+	program_version="0.6.2"
 	
 	# make root window
 	window=tk.Tk()
