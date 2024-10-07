@@ -75,7 +75,7 @@ class WindowContent(tk.Frame):
 			
 			return text_input
 		
-		def buttonRow(gbif_onoff,wiki_onoff,map_onoff,selector,user_input):
+		def buttonRow(gbif_onoff,wiki_onoff,simplemap_onoff,complexmap_onoff,selector,user_input):
 			
 			def clearText():
 				self.text_field.config(state="normal")
@@ -89,7 +89,8 @@ class WindowContent(tk.Frame):
 				clearText()
 				gbif_onoff.set(0)
 				wiki_onoff.set(0)
-				map_onoff.set(0)
+				simplemap_onoff.set(0)
+				complexmap_onoff.set(0)
 				selector.set("Accession Number")
 				self.input_frame.config(text="Input Accession Number")
 				self.text_field.config(width=250,height=40)
@@ -101,7 +102,7 @@ class WindowContent(tk.Frame):
 			def confirm():
 				gbif_state=gbif_onoff.get()
 				wiki_state=wiki_onoff.get()
-				#map_state=map_onoff.get()
+				#simplemap_state=simplemap_onoff.get()
 				text=getInfo.getText(selector, user_input, gbif_state, wiki_state)
 				
 				self.output_frame.config(text=f"Information for {selector.get()} {user_input.get()}")
@@ -110,6 +111,7 @@ class WindowContent(tk.Frame):
 				self.text_field.config(state="disabled")
 				
 				#generateMap(map_state,self.selection,self.query,self.text_field,self.map_field,self.map_image,self.background_image,self.render_map,self.map_label)
+			
 			
 			
 			tk.Button(self.button_frame,text='Confirm',command=lambda: confirm()).pack(side='top',fill='x',expand=1)
@@ -135,7 +137,7 @@ class WindowContent(tk.Frame):
 			# set label for above the input box
 			self.input_frame.config(text=f"Input {selector.get()}",font="Arial 14")
 			
-			# function for when the radiobuttons change
+			# function for when selection changes
 			def clicked(event):
 				if selector.get()=="Genome Index":
 					self.input_frame.config(text="Input Genome Index (0-379)")
@@ -162,7 +164,7 @@ class WindowContent(tk.Frame):
 				selector.set("Taxon Group")
 				clicked(event)
 			
-			# bind keyboard shortcuts for switching between radiobuttons
+			# bind keyboard shortcuts for switching between selections
 			self.inputselect_frame.bind_all("<Command-Key-1>", select_option_accNumber)
 			self.inputselect_frame.bind_all("<Command-Key-2>", select_option_speciesID)
 			self.inputselect_frame.bind_all("<Command-Key-3>", select_option_sciName)
@@ -196,41 +198,35 @@ class WindowContent(tk.Frame):
 			# subtitle of column
 			tk.Label(self.extraoptions_frame,text="*requires internet access",font="Arial 12").grid(row=5,column=3,padx=20,sticky="nw")
 			
-			# function for switching the map_state
-			def switchSimpleMap(event=None):
-				if simplemap_onoff.get()==1:
-					simplemap_onoff.set(0)
-				elif map_onoff.get()==0:
-					simplemap_onoff.set(1)
+			# function for switching the checkbuttons on or of with hotkeys
+			def switchState(stateswitch: tk.IntVar, event=None):
+				if stateswitch.get()==1:
+					stateswitch.set(0)
+				elif stateswitch.get()==0:
+					stateswitch.set(1)
 			
-			# function for switching the wiki_state
-			def switchWiki(event=None):
-				if wiki_onoff.get()==1:
-					wiki_onoff.set(0)
-				elif wiki_onoff.get()==0:
-					wiki_onoff.set(1)
-			
-			# function for switching the gbif_state
-			def switchGBIF(event=None):
-				if gbif_onoff.get()==1:
-					gbif_onoff.set(0)
-				elif gbif_onoff.get()==0:
-					gbif_onoff.set(1)
-			
-			# keybindings for map and gbif search switching
-			self.extraoptions_frame.bind_all("<Command-Key-l>", switchSimpleMap)
-			self.extraoptions_frame.bind_all("<Command-Key-k>", switchWiki)
-			self.extraoptions_frame.bind_all("<Command-Key-j>", switchGBIF)
+			# keybindings for checkbutton-switching
+			self.extraoptions_frame.bind_all("<Command-Key-j>", lambda event: switchState(gbif_onoff, event))
+			self.extraoptions_frame.bind_all("<Command-Key-k>", lambda event: switchState(wiki_onoff, event))
+			self.extraoptions_frame.bind_all("<Command-Key-l>", lambda event: switchState(simplemap_onoff, event))
+			self.extraoptions_frame.bind_all("<Command-Key-p>", lambda event: switchState(complexmap_onoff, event))
 			
 			
-			return gbif_onoff,wiki_onoff,simplemap_onoff
+			return gbif_onoff,wiki_onoff,simplemap_onoff,complexmap_onoff
 		
 		
 		selector=chooseInputMethod()
 		user_input=getUserInput(selector)
-		gbif_onoff,wiki_onoff,map_onoff=chooseOptions()
-		buttonRow(gbif_onoff,wiki_onoff,map_onoff,selector,user_input)
+		gbif_onoff,wiki_onoff,simplemap_onoff,complexmap_onoff=chooseOptions()
+		buttonRow(gbif_onoff,wiki_onoff,simplemap_onoff,complexmap_onoff,selector,user_input)
 	
 	def textArea(self):
 		self.text_field=tk.Text(self.output_frame,width=250,height=40,state="disabled",border=2,relief="solid",font="Arial 13",cursor="cross")
 		self.text_field.pack(side='left')
+
+
+
+if __name__ == "__main__":
+	main_window=MainInterface('CRYtabia','[only for testing]')
+	main_window.focus_set()
+	main_window.mainloop()
