@@ -7,11 +7,14 @@ Usage:
 
 from setuptools import setup
 
+
+
 NAME = ['CRYtabia']
-VERSION = ['0.4.5']
-APP = ['SpeciesInfo.py']
+VERSION = ['0.7.1']
+APP = ['main.py']
 DATA_FILES = [
 	'infolib.xlsx',
+	'images'
 ]
 OPTIONS = {
 	"iconfile": "images/icon.icns",
@@ -20,9 +23,11 @@ OPTIONS = {
 	
 	}
 
-setup(
-    app=APP,
-    data_files=DATA_FILES,
-    options={'py2app': OPTIONS},
-    setup_requires=['py2app'],
-)
+
+if __name__=='__main__':
+	setup(
+	    app=APP,
+	    data_files=DATA_FILES,
+	    options={'py2app': OPTIONS},
+	    setup_requires=['py2app'],
+	)

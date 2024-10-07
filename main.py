@@ -8,16 +8,19 @@ Created on Sun Sep 29 18:20:52 2024
 Main script for CRYtabia.
 """
 
-
-
-#from setup import VERSION,NAME
-
 # import custom functions for constructing interface
 import makeInterface
 
+# import the program name and version from the setup file
+from setup import NAME, VERSION
+
+# turn the importet program info into strings
+program_name=str(NAME[0])
+program_version=str(VERSION[0])
+
 # function for constructing the application
 def main():
-	main_window=makeInterface.MainInterface('CRYtabia','0.7.0')
+	main_window=makeInterface.MainInterface(program_name,program_version)
 	main_window.focus_set()
 	main_window.mainloop()
 
