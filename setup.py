@@ -10,7 +10,7 @@ from setuptools import setup
 
 
 NAME = ['CRYtabia']
-VERSION = ['0.7.1']
+VERSION = ['0.7.3']
 APP = ['main.py']
 DATA_FILES = [
 	'infolib.xlsx',

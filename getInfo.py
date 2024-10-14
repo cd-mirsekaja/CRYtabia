@@ -59,6 +59,26 @@ class SearchLibrary:
 		else:
 			return False
 	
+	def getSciName(self):
+		table=self.TAXO_LIBRARY
+		
+		if self.selection=="Accession Number":
+			# search for accession number in table. Input needs to get transformed to upper case.
+			matched_lines = table[table[table.columns[1]] == self.query.upper()].index.tolist()
+		
+		elif self.selection=="Genome Index":
+			# search for Genome Index in table. Data type set to int, important!
+			matched_lines = table[table[table.columns[0]] == int(self.query)].index.tolist()
+		
+		elif self.selection=="Scientific Name":
+			# search for the scientific name in the table
+			matched_lines = table[table[table.columns[10]] == self.query].index.tolist()
+		
+		name_values = table.iloc[matched_lines,10].values
+		name_str = ''.join(map(str, name_values[0]))
+		
+		return name_str
+	
 	# function for retrieving taxonomic information for one species from the table
 	def getSpeciesInfo(self):
 		table=self.TAXO_LIBRARY
@@ -232,11 +252,11 @@ class SearchGBIF:
 		return ''.join(out_list)
 
 	# function for generating a map png from the GBIF database
-	def makeMap(self):
+	def makeMap(self,source="density",bin="hex",style="purpleYellow-noborder.poly"):
 		from pygbif import maps
 		if 'usageKey' in self.backbone:
 			taxkey=self.backbone['usageKey']
-			outmap=maps.map(taxonKey=taxkey,source="density",bin="hex",hexPerTile="200",style="purpleYellow-noborder.poly",format="@1x.png",srs="EPSG:3857",x=0,y=0)
+			outmap=maps.map(taxonKey=taxkey,source=source,bin=bin,hexPerTile="200",style=style,format="@1x.png",srs="EPSG:3857",x=0,y=0)
 			map_path=outmap.path
 			return map_path
 		else:
@@ -388,6 +408,15 @@ def getText(selection,query,gbif_state,wiki_state):
 	else:
 		return main_text
 
+
+def getSciName(query,selection):
+	search_table=SearchLibrary(query.get().capitalize(),selection.get())
+	if selection.get()!="Taxon Group":
+		out_str=str(search_table.getSpeciesInfo()[0])
+	else:
+		out_str=str(query.get())
+	
+	return out_str
 
 # function for checking if the user is connected to the internet
 def internetConnection():

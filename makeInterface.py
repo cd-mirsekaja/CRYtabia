@@ -15,6 +15,7 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 
 import getInfo
+from complexMap import MapInterface
 
 class MainInterface(tk.Tk):
 	
@@ -110,8 +111,6 @@ class WindowContent(tk.Frame):
 				self.text_field.config(state="normal")
 				self.text_field.insert(1.0,''.join(text))
 				self.text_field.config(state="disabled")
-				
-				#generateMap(map_state,self.selection,self.query,self.text_field,self.map_field,self.map_image,self.background_image,self.render_map,self.map_label)
 			
 			
 			ttk.Separator(self.button_frame,orient='horizontal').pack(side='top',pady=10,fill='x',expand=1)
@@ -164,10 +163,10 @@ class WindowContent(tk.Frame):
 			
 			return selector
 		
-		def buttonColumn():
+		def buttonColumn(user_input, selection):
 			from tkinter.filedialog import asksaveasfilename
 			
-			def save_output():
+			def saveOutput():
 				FILE_TYPES=[("Simple Text Files","*.txt"),("Complex Text Files","*.rtf")]
 				filepath=asksaveasfilename(filetypes=FILE_TYPES)
 				
@@ -178,9 +177,23 @@ class WindowContent(tk.Frame):
 					content=self.text_field.get(1.0,tk.END)
 					file.write(content)
 			
-			ttk.Button(self.inputselect_frame,text="Open Map Editor (WIP)")
+			def editMap(user_input, selection):
+				if getInfo.internetConnection():
+					if user_input.get()!="":
+						sci_name=getInfo.getSciName(user_input, selection)
+						MapInterface(sci_name)
+					else:
+						self.text_field.config(state="normal")
+						self.text_field.insert(1.0,"\nPlease enter something.\n\n-------------------------------------------------------------\n")
+						self.text_field.config(state="disabled")
+				else:
+					self.text_field.config(state="normal")
+					self.text_field.insert(1.0,"\nNo Internet Connection available, map creation not possible.\n\n-------------------------------------------------------------\n")
+					self.text_field.config(state="disabled")
+				
+			ttk.Button(self.inputselect_frame,text="Open Map Editor (WIP)",command=lambda: editMap(user_input, selection))
 			ttk.Button(self.inputselect_frame,text="Open Table Editor (WIP)")
-			ttk.Button(self.inputselect_frame,text="Save Output to File",command=lambda: save_output())
+			ttk.Button(self.inputselect_frame,text="Save Output to File",command=lambda: saveOutput())
 			
 			for widget in self.inputselect_frame.winfo_children():
 				if '!labelframe.!button' in str(widget):
@@ -233,7 +246,7 @@ class WindowContent(tk.Frame):
 		user_input=getUserInput(selector)
 		gbif_onoff,wiki_onoff,simplemap_onoff,complexmap_onoff=chooseOptions()
 		buttonRow(gbif_onoff,wiki_onoff,simplemap_onoff,complexmap_onoff,selector,user_input)
-		buttonColumn()
+		buttonColumn(user_input,selector)
 	
 	def textArea(self):
 		self.text_field=tk.Text(self.output_frame,width=250,height=40,state="disabled",border=2,relief="solid",font="Arial 13",cursor="cross")
