@@ -11,8 +11,6 @@ This module constructs the interface for CRYtabia
 #import tkinter for managing GUI
 import tkinter as tk
 from tkinter import ttk
-#import image libraries for rendering images inside the GUI
-from PIL import Image, ImageTk
 
 import getInfo
 from complexMap import MapInterface
@@ -41,7 +39,7 @@ class WindowContent(tk.Frame):
 		super().__init__(main_frame)
 		
 		# option frame (top)
-		self.option_frame=tk.LabelFrame(main_frame, text='Options',border=2,relief='solid',font='Helvetica 14 bold')
+		self.option_frame=tk.LabelFrame(main_frame, text='Options (*requires internet access)',border=2,relief='solid',font='Helvetica 14 bold')
 		self.option_frame.pack(side='top',ipadx=20,ipady=20,padx=20,pady=20,fill='x')
 		self.option_frame.columnconfigure(0,weight=1)
 		self.option_frame.columnconfigure(1,weight=1)
@@ -166,6 +164,8 @@ class WindowContent(tk.Frame):
 		def buttonColumn(user_input, selection):
 			from tkinter.filedialog import asksaveasfilename
 			
+			self.map_window_open=False
+			
 			def saveOutput():
 				FILE_TYPES=[("Simple Text Files","*.txt"),("Complex Text Files","*.rtf")]
 				filepath=asksaveasfilename(filetypes=FILE_TYPES)
@@ -178,20 +178,35 @@ class WindowContent(tk.Frame):
 					file.write(content)
 			
 			def editMap(user_input, selection):
+				# function for destroying the window after it has been closed
+				def onMapClose():
+					self.map_window.destroy()
+					self.map_window_open=False
+				
+				# only execute if an internet connection is available
 				if getInfo.internetConnection():
+					# only execute if something was inputted
 					if user_input.get()!="":
-						sci_name=getInfo.getSciName(user_input, selection)
-						MapInterface(sci_name)
+						# only execute if the map window is not open already
+						if not self.map_window_open:
+							sci_name=getInfo.getSciName(user_input, selection)
+							self.map_window=MapInterface(sci_name)
+							self.map_window.protocol('WM_DELETE_WINDOW',lambda: onMapClose())
+							self.map_window_open=True
+						else:
+							self.map_window.focus_set()
+					# execute if there was no user input
 					else:
 						self.text_field.config(state="normal")
 						self.text_field.insert(1.0,"\nPlease enter something.\n\n-------------------------------------------------------------\n")
 						self.text_field.config(state="disabled")
+				# execute if no internet connection is available
 				else:
 					self.text_field.config(state="normal")
 					self.text_field.insert(1.0,"\nNo Internet Connection available, map creation not possible.\n\n-------------------------------------------------------------\n")
 					self.text_field.config(state="disabled")
 				
-			ttk.Button(self.inputselect_frame,text="Open Map Editor (WIP)",command=lambda: editMap(user_input, selection))
+			ttk.Button(self.inputselect_frame,text="Open Map Editor* (WIP)",command=lambda: editMap(user_input, selection))
 			ttk.Button(self.inputselect_frame,text="Open Table Editor (WIP)")
 			ttk.Button(self.inputselect_frame,text="Save Output to File",command=lambda: saveOutput())
 			
@@ -215,15 +230,15 @@ class WindowContent(tk.Frame):
 			# checkbox for enabling simple map generation
 			simplemap_onoff=tk.IntVar()
 			enable_simplemap=tk.Checkbutton(self.extraoptions_frame,text="Generate simple map (nonfunctional)*",variable=simplemap_onoff, onvalue=1, offvalue=0)
-			enable_simplemap.grid(row=3,column=3,padx=20,sticky="nw")
+			#enable_simplemap.grid(row=3,column=3,padx=20,sticky="nw")
 			
 			# checkbox for enabling complex map generation
 			complexmap_onoff=tk.IntVar()
 			enable_complexmap=tk.Checkbutton(self.extraoptions_frame,text="Generate complex map (nonfunctional)*",variable=complexmap_onoff, onvalue=1, offvalue=0)
-			enable_complexmap.grid(row=4,column=3,padx=20,sticky="nw")
+			#enable_complexmap.grid(row=4,column=3,padx=20,sticky="nw")
 			
 			# subtitle of column
-			tk.Label(self.extraoptions_frame,text="*requires internet access",font="Arial 12").grid(row=5,column=3,padx=20,sticky="nw")
+			#tk.Label(self.extraoptions_frame,text="*requires internet access",font="Arial 12").grid(row=5,column=3,padx=20,sticky="nw")
 			
 			# function for switching the checkbuttons on or of with hotkeys
 			def switchState(stateswitch: tk.IntVar, event=None):
@@ -235,8 +250,8 @@ class WindowContent(tk.Frame):
 			# keybindings for checkbutton-switching
 			self.extraoptions_frame.bind_all("<Command-Key-j>", lambda event: switchState(gbif_onoff, event))
 			self.extraoptions_frame.bind_all("<Command-Key-k>", lambda event: switchState(wiki_onoff, event))
-			self.extraoptions_frame.bind_all("<Command-Key-l>", lambda event: switchState(simplemap_onoff, event))
-			self.extraoptions_frame.bind_all("<Command-Key-p>", lambda event: switchState(complexmap_onoff, event))
+			#self.extraoptions_frame.bind_all("<Command-Key-l>", lambda event: switchState(simplemap_onoff, event))
+			#self.extraoptions_frame.bind_all("<Command-Key-p>", lambda event: switchState(complexmap_onoff, event))
 			
 			
 			return gbif_onoff,wiki_onoff,simplemap_onoff,complexmap_onoff

@@ -23,6 +23,8 @@ def main():
 	main_window=makeInterface.MainInterface(program_name,program_version)
 	main_window.focus_set()
 	main_window.mainloop()
+	
+	
 
 
 if __name__ == "__main__":

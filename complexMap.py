@@ -17,7 +17,7 @@ from getInfo import SearchGBIF,internetConnection
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-class MapInterface(tk.Tk):
+class MapInterface(tk.Toplevel):
 	
 	def resizeWindow(self,x: int, y: int):
 		self.geometry(f'{x}x{y}')
@@ -111,9 +111,9 @@ class WindowContent(tk.Frame):
 			"purpleYellow.point",
 			"purpleYellow.poly",
 			"purpleYellow-noborder.poly",
-			#"green.point",#nope
+			#"green.point",# nope
 			"green.poly",
-			#"green-noborder.poly",#nope
+			#"green-noborder.poly",# nope
 			"purpleHeat.point",
 			"blueHeat.point",
 			"orangeHeat.point",
@@ -121,14 +121,14 @@ class WindowContent(tk.Frame):
 			"fire.point",
 			"glacier.point",
 			"green2.poly",
-			#"green2-noborder.poly",#nope
+			#"green2-noborder.poly",# nope
 			"iNaturalist.poly",
 			"purpleWhite.poly",
 			"red.poly",
 			"blue.marker",
 			"orange.marker",
 			"outline.poly",
-			#"scaled.circles"#nope
+			#"scaled.circles"# nope
 			]
 		self.style_selector=tk.StringVar()
 		self.style_selector.set(style_list[5])

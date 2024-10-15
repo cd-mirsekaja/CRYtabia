@@ -411,12 +411,18 @@ def getText(selection,query,gbif_state,wiki_state):
 
 def getSciName(query,selection):
 	search_table=SearchLibrary(query.get().capitalize(),selection.get())
-	if selection.get()!="Taxon Group":
-		out_str=str(search_table.getSpeciesInfo()[0])
+	if search_table.inTable():
+		if selection.get()!="Taxon Group":
+			out_str=str(search_table.getSpeciesInfo()[0])
+		else:
+			out_str=str(query.get())
+	elif not search_table.inTable() and selection.get()=="Scientific Name" or selection.get()=="Taxon Group":
+		out_str=query.get()
 	else:
-		out_str=str(query.get())
+		out_str=""
 	
 	return out_str
+	
 
 # function for checking if the user is connected to the internet
 def internetConnection():
