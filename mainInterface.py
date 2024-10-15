@@ -13,7 +13,7 @@ import tkinter as tk
 from tkinter import ttk
 
 import getInfo
-from complexMap import MapInterface
+from mapInterface import MapInterface
 
 class MainInterface(tk.Tk):
 	
