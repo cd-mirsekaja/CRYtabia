@@ -20,23 +20,25 @@ class MainInterface(tk.Tk):
 	def resizeWindow(self,x: int, y: int):
 		self.geometry(f'{x}x{y}')
 		self.minsize(x,y)
-		self.maxsize(x,y)
+		#self.maxsize(x,y)
 	
-	def __init__(self,app_title: str, app_version: str):
+	def __init__(self,app_title: str, app_version: str, map_version: str):
 		super().__init__()
 		self.title(f'{app_title} {app_version}')
-		self.resizeWindow(1510, 920)
+		self.resizeWindow(1080, 720)
 		
 		self.main_frame=tk.Frame(self)
 		self.main_frame.pack(fill='both',expand=True)
 		
-		WindowContent(self.main_frame)
+		WindowContent(self.main_frame,map_version)
 
 
 class WindowContent(tk.Frame):
 	
-	def __init__(self,main_frame):
+	def __init__(self,main_frame,map_version):
 		super().__init__(main_frame)
+		
+		self.map_version=map_version
 		
 		# option frame (top)
 		self.option_frame=tk.LabelFrame(main_frame, text='Options (*requires internet access)',border=2,relief='solid',font='Helvetica 14 bold')
@@ -50,7 +52,7 @@ class WindowContent(tk.Frame):
 		self.inputselect_frame=tk.LabelFrame(self.option_frame,text="Search Library by",font="Arial 14",border=0)
 		self.input_frame=tk.LabelFrame(self.option_frame,text="",relief='solid',border=1)
 		self.button_frame=tk.Frame(self.input_frame,relief='solid',border=0)
-		self.extraoptions_frame=tk.LabelFrame(self.option_frame,text="Additional Options",border=0)
+		self.extraoptions_frame=tk.LabelFrame(self.option_frame,text="Text Options",border=0)
 		
 		self.inputselect_frame.grid(column=0,row=1,padx=50,pady=20,rowspan=2,sticky='enw')
 		self.input_frame.grid(column=1,row=1,padx=30,pady=20,sticky='enw')
@@ -69,13 +71,13 @@ class WindowContent(tk.Frame):
 		def getUserInput(selection):
 			
 			# input field for text
-			text_input=tk.Entry(self.input_frame,width=40,border=2,relief="sunken")
+			text_input=tk.Entry(self.input_frame,width=35,border=2,relief="sunken")
 			text_input.grid(row=1,column=1,sticky='enw',pady=20,padx=20)
 			self.input_frame.columnconfigure(1, weight=1)
 			
 			return text_input
 		
-		def buttonRow(gbif_onoff,wiki_onoff,simplemap_onoff,complexmap_onoff,selector,user_input):
+		def buttonRow(gbif_onoff,wiki_onoff,selector,user_input):
 			
 			def clearText():
 				self.text_field.config(state="normal")
@@ -89,20 +91,13 @@ class WindowContent(tk.Frame):
 				clearText()
 				gbif_onoff.set(0)
 				wiki_onoff.set(0)
-				simplemap_onoff.set(0)
-				complexmap_onoff.set(0)
 				selector.set("Genome Index")
 				self.input_frame.config(text="Input Genome Index")
 				self.text_field.config(width=250,height=40)
-				#self.map_field.config(width=0,height=0,border=0,relief="flat")
-				#self.map_label.config(text="")
-				#self.map_image.paste(self.background_image)
-				#self.render_map.config(image="")
 			
 			def confirm():
 				gbif_state=gbif_onoff.get()
 				wiki_state=wiki_onoff.get()
-				#simplemap_state=simplemap_onoff.get()
 				text=getInfo.getText(selector, user_input, gbif_state, wiki_state)
 				
 				self.output_frame.config(text=f"Information for {selector.get()} {user_input.get()}")
@@ -185,33 +180,33 @@ class WindowContent(tk.Frame):
 				
 				# only execute if an internet connection is available
 				if getInfo.internetConnection():
-					# only execute if something was inputted
-					if user_input.get()!="":
-						# only execute if the map window is not open already
-						if not self.map_window_open:
+					
+					# only execute if the map window is not open already
+					if not self.map_window_open:
+						# only execute if something was inputted
+						if user_input.get()!="":
 							sci_name=getInfo.getSciName(user_input, selection)
-							self.map_window=MapInterface(sci_name)
-							self.map_window.protocol('WM_DELETE_WINDOW',lambda: onMapClose())
-							self.map_window_open=True
 						else:
-							self.map_window.focus_set()
-					# execute if there was no user input
+							sci_name=""
+						self.map_window=MapInterface(sci_name,self.map_version)
+						self.map_window.protocol('WM_DELETE_WINDOW',lambda: onMapClose())
+						self.map_window_open=True
 					else:
-						self.text_field.config(state="normal")
-						self.text_field.insert(1.0,"\nPlease enter something.\n\n-------------------------------------------------------------\n")
-						self.text_field.config(state="disabled")
+						self.map_window.focus_set()
 				# execute if no internet connection is available
 				else:
 					self.text_field.config(state="normal")
 					self.text_field.insert(1.0,"\nNo Internet Connection available, map creation not possible.\n\n-------------------------------------------------------------\n")
 					self.text_field.config(state="disabled")
-				
-			ttk.Button(self.inputselect_frame,text="Open Map Editor* (WIP)",command=lambda: editMap(user_input, selection))
-			ttk.Button(self.inputselect_frame,text="Open Table Editor (WIP)")
+			
+			ttk.Separator(self.inputselect_frame,orient='horizontal')
+			
+			ttk.Button(self.inputselect_frame,text="Map Editor*",command=lambda: editMap(user_input, selection))
+			#ttk.Button(self.inputselect_frame,text="Table Editor (WIP)")
 			ttk.Button(self.inputselect_frame,text="Save Output to File",command=lambda: saveOutput())
 			
 			for widget in self.inputselect_frame.winfo_children():
-				if '!labelframe.!button' in str(widget):
+				if '!labelframe.!button' in str(widget) or '!labelframe.!separator' in str(widget):
 					widget.pack(side='top',expand=0,fill='x',padx=10,pady=5)
 		
 		#function for the checkbuttons in the Options column
@@ -227,16 +222,6 @@ class WindowContent(tk.Frame):
 			enable_wiki=tk.Checkbutton(self.extraoptions_frame,text='Get Wikipedia summary*',variable=wiki_onoff, onvalue=1, offvalue=0)
 			enable_wiki.grid(row=2,column=3,padx=20,sticky="nw")
 			
-			# checkbox for enabling simple map generation
-			simplemap_onoff=tk.IntVar()
-			enable_simplemap=tk.Checkbutton(self.extraoptions_frame,text="Generate simple map (nonfunctional)*",variable=simplemap_onoff, onvalue=1, offvalue=0)
-			#enable_simplemap.grid(row=3,column=3,padx=20,sticky="nw")
-			
-			# checkbox for enabling complex map generation
-			complexmap_onoff=tk.IntVar()
-			enable_complexmap=tk.Checkbutton(self.extraoptions_frame,text="Generate complex map (nonfunctional)*",variable=complexmap_onoff, onvalue=1, offvalue=0)
-			#enable_complexmap.grid(row=4,column=3,padx=20,sticky="nw")
-			
 			# subtitle of column
 			#tk.Label(self.extraoptions_frame,text="*requires internet access",font="Arial 12").grid(row=5,column=3,padx=20,sticky="nw")
 			
@@ -250,26 +235,23 @@ class WindowContent(tk.Frame):
 			# keybindings for checkbutton-switching
 			self.extraoptions_frame.bind_all("<Command-Key-j>", lambda event: switchState(gbif_onoff, event))
 			self.extraoptions_frame.bind_all("<Command-Key-k>", lambda event: switchState(wiki_onoff, event))
-			#self.extraoptions_frame.bind_all("<Command-Key-l>", lambda event: switchState(simplemap_onoff, event))
-			#self.extraoptions_frame.bind_all("<Command-Key-p>", lambda event: switchState(complexmap_onoff, event))
 			
-			
-			return gbif_onoff,wiki_onoff,simplemap_onoff,complexmap_onoff
+			return gbif_onoff,wiki_onoff
 		
-		
+		# call functions for making the interface
 		selector=chooseInputMethod()
 		user_input=getUserInput(selector)
-		gbif_onoff,wiki_onoff,simplemap_onoff,complexmap_onoff=chooseOptions()
-		buttonRow(gbif_onoff,wiki_onoff,simplemap_onoff,complexmap_onoff,selector,user_input)
+		gbif_onoff,wiki_onoff=chooseOptions()
+		buttonRow(gbif_onoff,wiki_onoff,selector,user_input)
 		buttonColumn(user_input,selector)
 	
 	def textArea(self):
-		self.text_field=tk.Text(self.output_frame,width=250,height=40,state="disabled",border=2,relief="solid",font="Arial 13",cursor="cross")
+		self.text_field=tk.Text(self.output_frame,width=250,height=100,state="disabled",border=2,relief="solid",font="Arial 13",cursor="cross")
 		self.text_field.pack(side='left')
 
 
 
 if __name__ == "__main__":
-	main_window=MainInterface('CRYtabia','[only for testing]')
+	main_window=MainInterface('CRYtabia','[only for testing]','[only for testing]')
 	main_window.focus_set()
 	main_window.mainloop()

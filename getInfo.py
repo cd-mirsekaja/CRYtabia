@@ -252,11 +252,11 @@ class SearchGBIF:
 		return ''.join(out_list)
 
 	# function for generating a map png from the GBIF database
-	def makeMap(self,source="density",bin="hex",style="purpleYellow-noborder.poly"):
+	def makeMap(self,source="density",bin="hex",style="purpleYellow-noborder.poly",year=None):
 		from pygbif import maps
 		if 'usageKey' in self.backbone:
 			taxkey=self.backbone['usageKey']
-			outmap=maps.map(taxonKey=taxkey,source=source,bin=bin,hexPerTile="200",style=style,format="@1x.png",srs="EPSG:3857",x=0,y=0)
+			outmap=maps.map(taxonKey=taxkey,source=source,style=style,bin=bin,year=year, hexPerTile="200",format="@1x.png",srs="EPSG:3857",x=0,y=0)
 			map_path=outmap.path
 			return map_path
 		else:
