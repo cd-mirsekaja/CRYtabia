@@ -123,13 +123,6 @@ class WindowContent(tk.Frame):
 		# function for choosing the input method and getting the user input
 		def chooseInputMethod():
 			
-			# set variable for storing the radiobutton selection
-			selector=tk.StringVar()
-			selector.set("Genome Index")
-			
-			# set label for above the input box
-			self.input_frame.config(text=f"Input {selector.get()}",font="Arial 14")
-			
 			# function for when selection changes
 			def clicked(event):
 				if selector.get()=="Genome Index":
@@ -137,6 +130,13 @@ class WindowContent(tk.Frame):
 				else:
 					self.input_frame.config(text=f"Input {selector.get()}")
 			
+			# set variable for storing the radiobutton selection
+			selector=tk.StringVar()
+			selector.set("Genome Index")
+			
+			# set label for above the input box
+			self.input_frame.config(font="Arial 14")
+			clicked(event=None)
 			
 			options_list=["Accession Number", "Genome Index", "Scientific Name", "Taxon Group"]
 			options_menu=tk.OptionMenu(self.inputselect_frame, selector, *(options_list), command=clicked)
