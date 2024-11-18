@@ -262,6 +262,35 @@ class SearchGBIF:
 		else:
 			return ""
 
+# class for getting information from the NCBI database
+class SearchNCBI:
+	
+	def __init__(self,user_input,selection):
+		self.API_URL = "https://api.ncbi.nlm.nih.gov/datasets/v2/"
+		self.url_seg_accession = "genome/accession/"
+		self.url_seg_taxon = "genome/taxon/"
+		
+		self.user_input=user_input
+		self.selection=selection
+	
+	def getGenomeData(self):
+		if self.selection=="Genome Index":
+			dataset_response=None
+		elif self.selection=="Accession Number":
+			dataset_response = requests.get(self.API_URL+self.url_seg_accession+self.user_input+"/dataset_report")
+		else:
+			dataset_response = requests.get(self.API_URL+self.url_seg_taxon+self.user_input+"/dataset_report")
+		
+		dataset_json = dataset_response.json()
+		return dataset_json
+	
+	def getDatasetAttributes(self):
+		dataset_json=self.getGenomeData()
+		
+		dataset_organism_info = dataset_json['reports'][0]['organism']
+		dataset_biosample_attr = dataset_json['reports'][0]['assembly_info']['biosample']['attributes']
+		return dataset_organism_info,dataset_biosample_attr
+
 # class for getting information from Wikipedia
 class SearchWikipedia:
 	
@@ -282,7 +311,7 @@ class SearchWikipedia:
 		return summary
 
 # function for preparing the search results for the text field
-def getText(selection,query,gbif_state,wiki_state):
+def getText(selection,query,gbif_state,ncbi_state,wiki_state,table_state):
 	sciName=""
 	sciNames=[]
 	# create an object for the table search class
@@ -306,96 +335,139 @@ def getText(selection,query,gbif_state,wiki_state):
 		if selection.get()!="Accession Number" and selection.get()!="Genome Index":
 			gbif_search=SearchGBIF((query.get()))
 			gbif_results=gbif_search.getTaxpath()
-			gbif_out=f"\nInformation from GBIF backbone:\n{gbif_results}\n"
+			gbif_out=f"\n--- Information from GBIF backbone ---\n{gbif_results}\n"
 		elif selection.get()=="Accession Number" or selection.get()=="Genome Index":
-			gbif_out=f"\nNo GBIF information available for {selection.get()}s.\n"
+			gbif_out=f"\n!! No GBIF information available for {selection.get()}s. !!\n"
 	elif gbif_state==1 and internetConnection()==False:
-		gbif_out="\nNo internet connection available, GBIF search impossible.\n"
+		gbif_out="\n!! No internet connection available, GBIF search impossible. !!\n"
 	elif gbif_state==0:
 		gbif_out=""
+	
+	# if NCBI search is enabled and an internet connection is available, output search results
+	if ncbi_state==1 and internetConnection()==True:
+		if selection.get()=="Accession Number":
+			ncbi_search=SearchNCBI((query.get()),selection.get())
+			organism_info,biosample_attributes=ncbi_search.getDatasetAttributes()
+			
+			ncbi_text=[]
+			
+			ncbi_text.append("--- NCBI Organism Report ---\n")
+			for key, item in organism_info.items():
+				ncbi_text.append(f"{key.capitalize()}: {item}\n")
+			
+			ncbi_text.append("\n--- Available information on NCBI for this biosample ---\n")
+			for list_obj in biosample_attributes:
+				for key, item in list_obj.items():
+					if key=="name":
+						ncbi_text.append(f"{item.capitalize()}: ")
+					elif key=="value":
+						ncbi_text.append(f"{item}\n")
+			
+			ncbi_out=f"\n{''.join(ncbi_text)}\n"
+		elif selection.get()=="Scientific Name" or selection.get()=="Taxon":
+			try:
+				ncbi_search=SearchNCBI((query.get()),selection.get())
+				organism_info,biosample_attributes=ncbi_search.getDatasetAttributes()
+				
+				ncbi_text=[]
+				
+				ncbi_text.append("--- NCBI Organism Report ---\n")
+				for key, item in organism_info.items():
+					ncbi_text.append(f"{key.capitalize()}: {item}\n")
+				
+				ncbi_text.append("\n--- Available information on NCBI for this taxon ---\n")
+				for list_obj in biosample_attributes:
+					for key, item in list_obj.items():
+						if key=="name":
+							ncbi_text.append(f"{item.capitalize()}: ")
+						elif key=="value":
+							ncbi_text.append(f"{item}\n")
+				
+				ncbi_out=f"\n{''.join(ncbi_text)}\n"
+			except KeyError:
+				ncbi_out=f"\n!! NCBI Information not found for {selection.get()} {query.get()} !!\n"
+		else:
+			ncbi_out=f"\nCurrently no NCBI information available for {selection.get()}s.\n"
+	elif ncbi_state==1 and internetConnection()==False:
+		ncbi_out="\n!! No internet connection available, NCBI search impossible. !!\n"
+	elif ncbi_state==0:
+		ncbi_out=""
 	
 	# if Wikipedia search is enabled and an internet connection is available, output page summary
 	if wiki_state==1 and internetConnection()==True:
 		if selection.get()!="Accession Number" and selection.get()!="Genome Index":
 			wiki_search=SearchWikipedia(query.get())
 			wiki_summary=wiki_search.getSummary()
-			wiki_out=f"\nInformation from Wikipedia page:\n{wiki_summary}\n"
+			wiki_out=f"\n--- Information from Wikipedia page ---\n{wiki_summary}\n"
 		elif selection.get()=="Accession Number" or selection.get()=="Genome Index":
-			wiki_out=f"\nNo Wikipedia information for {selection.get()}s.\n"
+			wiki_out=f"\n!! No Wikipedia information for {selection.get()}s. !!\n"
 	elif wiki_state==1 and internetConnection()==False:
-		wiki_out="\nNo internet connection available, Wikipedia search impossible.\n"
+		wiki_out="\n!! No internet connection available, Wikipedia search impossible. !!\n"
 	elif wiki_state==0:
 		wiki_out=""
 	
-	# check for input of radio buttons
-	if selection.get()!="Taxon Group":
-		# check if species is available in reference table
-		is_in_table=search_table.inTable()
-		
-		if is_in_table:
-			# get taxonomic information
-			sciName,authority,taxPath,taxGroup,engName,gerName,accList,indexList=search_table.getSpeciesInfo()
-			# get habitats the species lives in
-			habitats=search_table.getHabitat()
+	# if table search is enabled, output information from library
+	if table_state==1:
+		if selection.get()!="Taxon Group":
+			# check if species is available in reference table
+			is_in_table=search_table.inTable()
 			
-			# combine available accession numbers into string
-			if selection.get()=="Accession Number":
-				acc_text=""
-			elif selection.get()=="Genome Index":
-				acc_text=f"Accession Number for this index is {accList[0]}\n\n"
-			elif selection.get()!="Accession Number" and len(accList)==1:
-				acc_text=f"One available Accession Number, {accList[0]} with Index {indexList[0]}\n\n"
-			elif selection.get()!="Accession Number" and len(accList)>1:
-				acc_text=f"Available Accession Number are {', '.join(accList)}\nAvailable Indices are {indexList}\n"
+			if is_in_table:
+				# get taxonomic information
+				sciName,authority,taxPath,taxGroup,engName,gerName,accList,indexList=search_table.getSpeciesInfo()
+				# get habitats the species lives in
+				habitats=search_table.getHabitat()
+				
+				# combine available accession numbers into string
+				if selection.get()=="Accession Number":
+					acc_text=""
+				elif selection.get()=="Genome Index":
+					acc_text=f"Accession Number for this index is {accList[0]}\n\n"
+				elif selection.get()!="Accession Number" and len(accList)==1:
+					acc_text=f"One available Accession Number, {accList[0]} with Index {indexList[0]}\n\n"
+				elif selection.get()!="Accession Number" and len(accList)>1:
+					acc_text=f"Available Accession Number are {', '.join(accList)}\nAvailable Indices are {indexList}\n"
+				
+				# get vernacular name string
+				vern_text=vernacular_text(engName, gerName)
+				
+				table_list=[
+					"\n--- Information from the core library ---\n",
+					f"\n{sciName} {authority} belongs to the {taxGroup}.\n",
+					vern_text+"\n",
+					f"\nThe Species is known to live in {habitats} habitats.\n\n",
+					f"{acc_text}"
+					"Taxonomic Path as kingdom > phylum > class > order > family > genus:\n",
+					f"{taxPath}\n",
+					]
+				table_out=''.join(table_list)
+			else:
+				table_out=f"\nNo information on {selection.get().lower()} {query.get()} available from reference table.\n"
+		elif selection.get()=="Taxon Group":
+			# get scientific names and name of taxon group
+			sciNames,col_title=search_table.getTaxgroupInfo()
+			# get the number of species belonging to the taxon
+			speciescount=len(sciNames)
 			
-			# get vernacular name string
-			vern_text=vernacular_text(engName, gerName)
-			# set main output text
-			main_text=[
-				f"\n=== Info for {selection.get().lower()} {query.get()} ===\n"
-				f"\n{sciName} {authority} belongs to the {taxGroup}.\n",
-				vern_text+"\n",
-				f"\nThe Species is known to live in {habitats} habitats.\n\n",
-				f"{acc_text}"
-				"Taxonomic Path as kingdom > phylum > class > order > family > genus:\n",
-				f"{taxPath}\n",
-				f"{gbif_out}",
-				f"{wiki_out}",
-				"\n-------------------------------------------------------------"+"\n"
-				]
-		else:
-			# set main output text
-			main_text=[
-				f"\nNo information on {selection.get().lower()} {query.get()} available from reference table.\n",
-				f"{gbif_out}",
-				f"{wiki_out}",
-				"\n-------------------------------------------------------------"+"\n"
-				]
+			if speciescount>0:
+				table_out=f"\n{speciescount} species found in table belonging to {col_title.lower()} {query.get().capitalize()}:\n{', '.join(sciNames)}\n"
+			else:
+				table_out=f"\nNo information on taxon group {query.get()} available from reference table.\n"
+			
+	else:
+		table_out=""
 	
-	elif selection.get()=="Taxon Group":
-		# get scientific names and name of taxon group
-		sciNames,col_title=search_table.getTaxgroupInfo()
-		# get the number of species belonging to the taxon
-		speciescount=len(sciNames)
-		
-		if speciescount>0:
-			# set main output text
-			main_text=[
-				f"\n{speciescount} species found in table belonging to {col_title.lower()} {query.get().capitalize()}:\n",
-				f"{', '.join(sciNames)}\n",
-				f"{gbif_out}",
-				f"{wiki_out}",
-				"\n-------------------------------------------------------------"+"\n"
-				]
-		else:
-			# set main output text
-			main_text=[
-				f"\nNo information on taxon group {query.get()} available from reference table.\n",
-				f"{gbif_out}",
-				f"{wiki_out}",
-				"\n-------------------------------------------------------------"+"\n"
-				]
 
+	# set main output text
+	main_text=[
+		f"\n=== Info for {selection.get().lower()} {query.get()} ===\n",
+		f"{table_out}",
+		f"{gbif_out}",
+		f"{wiki_out}",
+		f"{ncbi_out}",
+		"\n-------------------------------------------------------------"+"\n"
+		]
+	
 	# set text for when no input was given
 	none_text=[
 		"\nPlease enter something.\n"
