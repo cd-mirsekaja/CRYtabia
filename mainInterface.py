@@ -46,8 +46,6 @@ class WindowContent(tk.Frame):
 		self.option_frame.columnconfigure(0,weight=1)
 		self.option_frame.columnconfigure(1,weight=1)
 		self.option_frame.columnconfigure(2,weight=1)
-		#self.option_frame.rowconfigure(1,minsize=50)
-		#self.option_frame.rowconfigure(2,minsize=50)
 		
 		self.inputselect_frame=tk.LabelFrame(self.option_frame,text="Search Library by",font="Arial 14",border=0)
 		self.input_frame=tk.LabelFrame(self.option_frame,text="",relief='solid',border=1)
@@ -216,7 +214,7 @@ class WindowContent(tk.Frame):
 			
 			# checkbox for disabling table search
 			table_onoff=tk.IntVar()
-			enable_table=tk.Checkbutton(self.extraoptions_frame,text='Search table (WIP)',variable=table_onoff, onvalue=1, offvalue=0)
+			enable_table=tk.Checkbutton(self.extraoptions_frame,text='Search table',variable=table_onoff, onvalue=1, offvalue=0)
 			table_onoff.set(1)
 			enable_table.grid(row=0,column=3,padx=20,sticky="nw")
 			
@@ -227,7 +225,7 @@ class WindowContent(tk.Frame):
 			
 			# checkbox for enabling NCBI genome search
 			ncbi_onoff=tk.IntVar()
-			enable_ncbi=tk.Checkbutton(self.extraoptions_frame,text='Get NCBI information* (WIP)',variable=ncbi_onoff, onvalue=1, offvalue=0)
+			enable_ncbi=tk.Checkbutton(self.extraoptions_frame,text='Get NCBI information*',variable=ncbi_onoff, onvalue=1, offvalue=0)
 			enable_ncbi.grid(row=2,column=3,padx=20,sticky="nw")
 			
 			# checkbox for enabling Wikipedia search
