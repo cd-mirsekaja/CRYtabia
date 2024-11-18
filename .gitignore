@@ -7,6 +7,7 @@
 .eggs/py2app-0.28.8-py3.9.egg/.DS_Store
 .spyproject/.DS_Store
 .spyproject/config/.DS_Store
+.gitignore
 __pycache__/complexMap.cpython-311.pyc
 __pycache__/getInfo.cpython-311.pyc
 __pycache__/mainInterface.cpython-311.pyc
@@ -15,3 +16,5 @@ __pycache__/mapInterface.cpython-311.pyc
 __pycache__/setup.cpython-311.pyc
 images/.DS_Store
 previous_versions/.DS_Store
+test_scripts
+
