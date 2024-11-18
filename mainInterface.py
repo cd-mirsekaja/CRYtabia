@@ -90,7 +90,7 @@ class WindowContent(tk.Frame):
 				gbif_onoff.set(0)
 				wiki_onoff.set(0)
 				selector.set("Genome Index")
-				self.input_frame.config(text="Input Genome Index")
+				self.input_frame.config(text="Input Genome Index (0-379)")
 				self.text_field.config(width=250,height=40)
 			
 			def confirm():
@@ -223,16 +223,15 @@ class WindowContent(tk.Frame):
 			enable_gbif=tk.Checkbutton(self.extraoptions_frame,text='Search GBIF Backbone*',variable=gbif_onoff, onvalue=1, offvalue=0)
 			enable_gbif.grid(row=1,column=3,padx=20,sticky="nw")
 			
-			# checkbox for enabling NCBI genome search
-			ncbi_onoff=tk.IntVar()
-			enable_ncbi=tk.Checkbutton(self.extraoptions_frame,text='Get NCBI information*',variable=ncbi_onoff, onvalue=1, offvalue=0)
-			enable_ncbi.grid(row=2,column=3,padx=20,sticky="nw")
-			
 			# checkbox for enabling Wikipedia search
 			wiki_onoff=tk.IntVar()
 			enable_wiki=tk.Checkbutton(self.extraoptions_frame,text='Get Wikipedia summary*',variable=wiki_onoff, onvalue=1, offvalue=0)
-			enable_wiki.grid(row=3,column=3,padx=20,sticky="nw")
+			enable_wiki.grid(row=2,column=3,padx=20,sticky="nw")
 			
+			# checkbox for enabling NCBI genome search
+			ncbi_onoff=tk.IntVar()
+			enable_ncbi=tk.Checkbutton(self.extraoptions_frame,text='Get NCBI information*',variable=ncbi_onoff, onvalue=1, offvalue=0)
+			enable_ncbi.grid(row=3,column=3,padx=20,sticky="nw")
 			
 			
 			# function for switching the checkbuttons on or of with hotkeys
@@ -245,8 +244,8 @@ class WindowContent(tk.Frame):
 			# keybindings for checkbutton-switching
 			self.extraoptions_frame.bind_all("<Command-Key-t>", lambda event: switchState(table_onoff, event))
 			self.extraoptions_frame.bind_all("<Command-Key-j>", lambda event: switchState(gbif_onoff, event))
-			self.extraoptions_frame.bind_all("<Command-Key-k>", lambda event: switchState(ncbi_onoff, event))
-			self.extraoptions_frame.bind_all("<Command-Key-l>", lambda event: switchState(wiki_onoff, event))
+			self.extraoptions_frame.bind_all("<Command-Key-k>", lambda event: switchState(wiki_onoff, event))
+			self.extraoptions_frame.bind_all("<Command-Key-l>", lambda event: switchState(ncbi_onoff, event))
 			
 			return gbif_onoff,ncbi_onoff,wiki_onoff,table_onoff
 		

@@ -24,7 +24,7 @@ def main():
 	main_window=MainInterface(program_name,program_version,MAP_ADDON_VERSION)
 	main_window.focus_set()
 	main_window.mainloop()
-	
+
 
 
 if __name__ == "__main__":

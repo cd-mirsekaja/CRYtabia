@@ -364,7 +364,7 @@ def getText(selection,query,gbif_state,ncbi_state,wiki_state,table_state):
 						ncbi_text.append(f"{item}\n")
 			
 			ncbi_out=f"\n{''.join(ncbi_text)}\n"
-		elif selection.get()=="Scientific Name" or selection.get()=="Taxon":
+		elif selection.get()=="Scientific Name" or selection.get()=="Taxon Group":
 			try:
 				ncbi_search=SearchNCBI((query.get()),selection.get())
 				organism_info,biosample_attributes=ncbi_search.getDatasetAttributes()
