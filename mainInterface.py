@@ -14,6 +14,7 @@ from tkinter import ttk
 
 import getInfo
 from mapInterface import MapInterface
+from autoComplete import getSuggestions
 
 class MainInterface(tk.Tk):
 	
@@ -42,7 +43,7 @@ class WindowContent(tk.Frame):
 		
 		# option frame (top)
 		self.option_frame=tk.LabelFrame(main_frame, text='Options (*requires internet access)',border=2,relief='solid',font='Helvetica 14 bold')
-		self.option_frame.pack(side='top',ipadx=20,ipady=20,padx=20,pady=20,fill='x')
+		self.option_frame.pack(side='top',ipadx=20,padx=20,pady=20,fill='x')
 		self.option_frame.columnconfigure(0,weight=1)
 		self.option_frame.columnconfigure(1,weight=1)
 		self.option_frame.columnconfigure(2,weight=1)
@@ -54,7 +55,7 @@ class WindowContent(tk.Frame):
 		
 		self.inputselect_frame.grid(column=0,row=1,padx=50,pady=20,rowspan=2,sticky='enw')
 		self.input_frame.grid(column=1,row=1,padx=30,pady=20,sticky='enw')
-		self.button_frame.grid(column=1,row=2,padx=30,pady=20,sticky='enw')
+		self.button_frame.grid(column=1,row=3,padx=30,pady=20,sticky='enw')
 		self.extraoptions_frame.grid(column=2,row=1,padx=50,pady=20,rowspan=2,sticky='enw')
 		
 		# output frame (bottom)
@@ -68,16 +69,46 @@ class WindowContent(tk.Frame):
 		
 		def getUserInput(selection):
 			
-			# input field for text
-			text_input=tk.Entry(self.input_frame,width=35,border=2,relief="sunken")
-			text_input.grid(row=1,column=1,sticky='enw',pady=20,padx=20)
+			# entry field for text
+			text_input=tk.Entry(self.input_frame,width=35,border=2,relief='sunken')
+			text_input.grid(row=1,column=1,sticky='enw',pady=5,padx=20)
+			
+			# listbox field for autocomplete
+			autocomplete_field=tk.Listbox(self.input_frame,width=35,height=5,border=0)
+			autocomplete_field.grid(row=2,column=1,sticky='enw',padx=20)
+			
 			self.input_frame.columnconfigure(1, weight=1)
+			
+			# function for updating the autocomplete suggestions
+			def _updateSuggestions(event, trie, entry, autocomplete_field):
+				prefix = entry.get()
+				if not prefix:
+					autocomplete_field.delete(0, tk.END)
+					return
+				suggestions = trie.search(prefix)
+				autocomplete_field.delete(0, tk.END)
+				for suggestion in suggestions:
+					autocomplete_field.insert(tk.END, suggestion)
+			
+			# function for inserting the selected word into the entry field
+			def _clickEntry(event,entry,autocomplete_field):
+				cursor=autocomplete_field.curselection()
+				
+				selection=autocomplete_field.get(cursor)
+				entry.delete(0,tk.END)
+				entry.insert(0,selection)
+			
+			# binds the release of a key in the entry field to update the autocomplete suggestions
+			text_input.bind("<KeyRelease>", lambda event: _updateSuggestions(event, self.trie, text_input, autocomplete_field))
+			# binds double click and tab while an entry in the listbox is selected to insert that entry into the input field
+			autocomplete_field.bind('<Double-1>',lambda event: _clickEntry(event, text_input, autocomplete_field))
+			autocomplete_field.bind('<Tab>',lambda event: _clickEntry(event, text_input, autocomplete_field))
 			
 			return text_input
 		
 		def buttonRow(gbif_onoff,ncbi_onoff,wiki_onoff,table_onoff,selector,user_input):
 			
-			def clearText():
+			def _clearText():
 				self.text_field.config(state="normal")
 				self.text_field.delete(1.0,tk.END)
 				self.text_field.config(state="disabled")
@@ -85,15 +116,15 @@ class WindowContent(tk.Frame):
 				self.output_frame.config(text='Requested Information will show up below')
 			
 			# function for resetting all inputs and fields
-			def reset():
-				clearText()
+			def _reset():
+				_clearText()
 				gbif_onoff.set(0)
 				wiki_onoff.set(0)
 				selector.set("Genome Index")
 				self.input_frame.config(text="Input Genome Index (0-379)")
 				self.text_field.config(width=250,height=40)
 			
-			def confirm():
+			def _confirm():
 				gbif_state=gbif_onoff.get()
 				ncbi_state=ncbi_onoff.get()
 				wiki_state=wiki_onoff.get()
@@ -107,24 +138,25 @@ class WindowContent(tk.Frame):
 			
 			
 			ttk.Separator(self.button_frame,orient='horizontal').pack(side='top',pady=10,fill='x',expand=1)
-			ttk.Button(self.button_frame,text='Confirm',command=lambda: confirm()).pack(side='top',padx=5,fill='x',expand=1)
-			ttk.Button(self.button_frame,text='Clear',command=lambda: clearText()).pack(side='left',padx=5,fill='x',expand=1)
-			ttk.Button(self.button_frame,text='Reset',command=lambda: reset()).pack(side='right',padx=5,fill='x',expand=1)
+			ttk.Button(self.button_frame,text='Confirm',command=lambda: _confirm()).pack(side='top',padx=5,fill='x',expand=1)
+			ttk.Button(self.button_frame,text='Clear',command=lambda: _clearText()).pack(side='left',padx=5,fill='x',expand=1)
+			ttk.Button(self.button_frame,text='Reset',command=lambda: _reset()).pack(side='right',padx=5,fill='x',expand=1)
 			
 			# make it so the input can be cofirmed by pressing return
-			self.button_frame.bind_all("<Return>",lambda x: confirm())
+			self.button_frame.bind_all("<Return>",lambda x: _confirm())
 			# make it so that the content can be cleared by pressing escape
-			self.button_frame.bind_all("<Escape>",lambda x: reset())
+			self.button_frame.bind_all("<Escape>",lambda x: _reset())
 			# make it so that all text is cleared by pressing command and backspace
-			self.button_frame.bind_all("<Command-Key-BackSpace>",lambda x: clearText())
+			self.button_frame.bind_all("<Command-Key-BackSpace>",lambda x: _clearText())
 			
 			
-		
 		# function for choosing the input method and getting the user input
 		def chooseInputMethod():
 			
 			# function for when selection changes
 			def clicked(event):
+				# get an object containing all words from the input table
+				self.trie=getSuggestions(selector.get())
 				if selector.get()=="Genome Index":
 					self.input_frame.config(text="Input Genome Index (0-379)")
 				else:

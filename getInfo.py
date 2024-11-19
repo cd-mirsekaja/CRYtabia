@@ -293,8 +293,12 @@ class SearchNCBI:
 	def getDatasetAttributes(self):
 		dataset_json=self.getGenomeData()
 		
-		dataset_organism_info = dataset_json['reports'][0]['organism']
-		dataset_biosample_attr = dataset_json['reports'][0]['assembly_info']['biosample']['attributes']
+		try:
+			dataset_organism_info = dataset_json['reports'][0]['organism']
+			dataset_biosample_attr = dataset_json['reports'][0]['assembly_info']['biosample']['attributes']
+		except KeyError:
+			dataset_organism_info = None
+			dataset_biosample_attr = None
 		return dataset_organism_info,dataset_biosample_attr
 
 # class for getting information from Wikipedia
@@ -302,7 +306,7 @@ class SearchWikipedia:
 	
 	def __init__(self,sciName):
 		import wikipediaapi as wiki
-		self.wiki_en=wiki.Wikipedia('CryptochromeCoSegregation (ronja.roesner@uni-oldenburg.de','en')
+		self.wiki_en=wiki.Wikipedia('CRYtabia (ronja.roesner@uni-oldenburg.de','en')
 		self.sciName=sciName
 	
 	def getSummary(self):
@@ -354,23 +358,26 @@ def getText(selection,query,gbif_state,ncbi_state,wiki_state,table_state):
 	if ncbi_state==1 and internetConnection()==True:
 		if selection.get()=="Accession Number":
 			ncbi_search=SearchNCBI((query.get()),selection.get())
-			organism_info,biosample_attributes=ncbi_search.getDatasetAttributes()
-			
-			ncbi_text=[]
-			
-			ncbi_text.append("--- NCBI Organism Report ---\n")
-			for key, item in organism_info.items():
-				ncbi_text.append(f"{key.capitalize()}: {item}\n")
-			
-			ncbi_text.append("\n--- Available information on NCBI for this biosample ---\n")
-			for list_obj in biosample_attributes:
-				for key, item in list_obj.items():
-					if key=="name":
-						ncbi_text.append(f"{item.capitalize()}: ")
-					elif key=="value":
-						ncbi_text.append(f"{item}\n")
-			
-			ncbi_out=f"\n{''.join(ncbi_text)}\n"
+			try:
+				organism_info,biosample_attributes=ncbi_search.getDatasetAttributes()
+				ncbi_text=[]
+				
+				ncbi_text.append("--- NCBI Organism Report ---\n")
+				for key, item in organism_info.items():
+					ncbi_text.append(f"{key.capitalize()}: {item}\n")
+				
+				ncbi_text.append("\n--- Available information on NCBI for this biosample ---\n")
+				for list_obj in biosample_attributes:
+					for key, item in list_obj.items():
+						if key=="name":
+							ncbi_text.append(f"{item.capitalize()}: ")
+						elif key=="value":
+							ncbi_text.append(f"{item}\n")
+				
+				ncbi_out=f"\n{''.join(ncbi_text)}\n"
+			except AttributeError:
+				ncbi_out=f"\nNo NCBI information found for biosample {query.get()}\n"
+		
 		elif selection.get()=="Scientific Name" or selection.get()=="Taxon Group":
 			try:
 				ncbi_search=SearchNCBI((query.get()),selection.get())
@@ -464,7 +471,7 @@ def getText(selection,query,gbif_state,ncbi_state,wiki_state,table_state):
 	else:
 		table_out=""
 	
-
+	
 	# set main output text
 	main_text=[
 		f"\n=== Info for {selection.get().lower()} {query.get()} ===\n",
@@ -482,7 +489,7 @@ def getText(selection,query,gbif_state,ncbi_state,wiki_state,table_state):
 		]
 	
 	# check if an input was given and modifify text field accordingly
-	if query.get()=="":
+	if str(query.get())=="":
 		return none_text
 	else:
 		return main_text
@@ -513,5 +520,11 @@ def internetConnection():
 
 
 if __name__ == "__main__":
-	data=SearchLibrary()
+	data=SearchLibrary("Danio rerio","Scientific Name")
+	if internetConnection():
+		wiki=SearchWikipedia("Danio rerio")
+		gbif=SearchGBIF("Danio rerio")
+		ncbi=SearchNCBI("GCA_903684865.1", "Accession Number")
+	
+	print()
 
