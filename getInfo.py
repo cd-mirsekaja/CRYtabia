@@ -6,9 +6,10 @@ Created on Sun Sep 29 18:24:15 2024
 @author: Ronja Rösner
 
 This module extracts data from multiple sources:
-	- the companion database
-	- Wikipedia
-	- the GBIF backbone
+	the core database (infolib.xlsx)
+	Wikipedia
+	the GBIF backbone
+	the NCBI Genome database
 """
 
 # import library for accessing the os
@@ -53,6 +54,11 @@ class SearchLibrary:
 		elif self.selection=="Scientific Name":
 			# search for the scientific name in the table
 			matched_lines = table[table[table.columns[10]] == self.query].index.tolist()
+		
+		elif self.selection=="Taxon Group":
+			# search for the given taxon group in the table
+			matched_lines = table[table[table.columns[2:7]] == self.query].index.tolist()
+			matched_lines = matched_lines + table[table[table.columns[14]] == self.query].index.tolist()
 		
 		if matched_lines!=[]:
 			return True
@@ -174,7 +180,6 @@ class SearchLibrary:
 		table=self.TAXO_LIBRARY
 		taxGroup=self.query
 		
-		
 		matched_lines_kingdom=table[table[table.columns[2]] == taxGroup].index.tolist()
 		if matched_lines_kingdom!=[]: matched_title=table.columns[2]
 		matched_lines_phylum=table[table[table.columns[3]] == taxGroup].index.tolist()
@@ -196,10 +201,10 @@ class SearchLibrary:
 		if matched_lines!=[]:
 			sciNames=table.iloc[matched_lines,10].values.tolist()
 			sciNames = list(set(sciNames))
-			
 			return sciNames,matched_title
 		else:
 			return [],""
+
 
 # class for searching the GBIF (Global Biodiversity Information Facility, https://gbif.org) Database
 class SearchGBIF:
@@ -262,6 +267,7 @@ class SearchGBIF:
 		else:
 			return ""
 
+
 # class for getting information from the NCBI database
 class SearchNCBI:
 	
@@ -309,6 +315,7 @@ class SearchWikipedia:
 			summary="Wikpedia page does not exist."
 		
 		return summary
+
 
 # function for preparing the search results for the text field
 def getText(selection,query,gbif_state,ncbi_state,wiki_state,table_state):
@@ -494,7 +501,7 @@ def getSciName(query,selection):
 		out_str=""
 	
 	return out_str
-	
+
 
 # function for checking if the user is connected to the internet
 def internetConnection():
