@@ -9,7 +9,10 @@ Created on Tue Nov 19 14:33:49 2024
 
 from collections import defaultdict
 import pandas as pd
+import os
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+INPUT_TABLE = os.path.join(SCRIPT_DIR, "infolib.xlsx")
 
 class TrieNode:
 	def __init__(self):
@@ -68,7 +71,7 @@ def load_words(filename):
 
 
 def getSuggestions(selection):
-	acc_numbers, genome_ids, sci_names, taxon_groups = load_words("infolib.xlsx")
+	acc_numbers, genome_ids, sci_names, taxon_groups = load_words(INPUT_TABLE)
 	trie = Trie()
 	
 	if selection=="Accession Number":
