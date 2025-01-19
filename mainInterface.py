@@ -172,7 +172,7 @@ class WindowContent(tk.Frame):
 			
 			options_list=["Accession Number", "Genome Index", "Scientific Name", "Taxon Group"]
 			options_menu=tk.OptionMenu(self.inputselect_frame, selector, *(options_list), command=clicked)
-			options_menu.pack(side='top',expand=0,fill='x',padx=10,pady=10)
+			options_menu.pack(side='top',expand=0,fill='x',padx=10,pady=5)
 			
 			
 			# function for binding keyboard shortcuts
@@ -248,22 +248,22 @@ class WindowContent(tk.Frame):
 			table_onoff=tk.IntVar()
 			enable_table=tk.Checkbutton(self.extraoptions_frame,text='Search table',variable=table_onoff, onvalue=1, offvalue=0)
 			table_onoff.set(1)
-			enable_table.grid(row=0,column=3,padx=20,sticky="nw")
+			enable_table.grid(row=0,column=3,padx=10,sticky="nw")
 			
 			# checkbox for enabling GBIF search
 			gbif_onoff=tk.IntVar()
 			enable_gbif=tk.Checkbutton(self.extraoptions_frame,text='Search GBIF Backbone*',variable=gbif_onoff, onvalue=1, offvalue=0)
-			enable_gbif.grid(row=1,column=3,padx=20,sticky="nw")
+			enable_gbif.grid(row=1,column=3,padx=10,sticky="nw")
 			
 			# checkbox for enabling Wikipedia search
 			wiki_onoff=tk.IntVar()
 			enable_wiki=tk.Checkbutton(self.extraoptions_frame,text='Get Wikipedia summary*',variable=wiki_onoff, onvalue=1, offvalue=0)
-			enable_wiki.grid(row=2,column=3,padx=20,sticky="nw")
+			enable_wiki.grid(row=2,column=3,padx=10,sticky="nw")
 			
 			# checkbox for enabling NCBI genome search
 			ncbi_onoff=tk.IntVar()
 			enable_ncbi=tk.Checkbutton(self.extraoptions_frame,text='Get NCBI information*',variable=ncbi_onoff, onvalue=1, offvalue=0)
-			enable_ncbi.grid(row=3,column=3,padx=20,sticky="nw")
+			enable_ncbi.grid(row=3,column=3,padx=10,sticky="nw")
 			
 			
 			# function for switching the checkbuttons on or of with hotkeys
