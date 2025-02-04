@@ -118,8 +118,10 @@ class WindowContent(tk.Frame):
 			# function for resetting all inputs and fields
 			def _reset():
 				_clearText()
+				table_onoff.set(1)
 				gbif_onoff.set(0)
 				wiki_onoff.set(0)
+				ncbi_onoff.set(0)
 				selector.set("Genome Index")
 				self.input_frame.config(text="Input Genome Index (0-379)")
 				self.text_field.config(width=250,height=40)
