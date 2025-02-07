@@ -12,14 +12,145 @@ This module extracts data from multiple sources:
 	the NCBI Genome database
 """
 
-# import library for accessing the os
-import os
-# import library for internet connections
-import requests
+# import libraries
+import os, requests, sqlite3
 
 
 # get script directory
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+class SearchDatabase:
+
+	def __init__(self,query: str,selection: str):
+		db_file=os.path.join(SCRIPT_DIR,"data/genotree_master_library.db")
+
+		# establishes connection to the database
+		db_conn=sqlite3.connect(db_file)
+		# creates new cursor object to interact with the database
+		self.cursor=db_conn.cursor()
+
+		self.user_query=query
+		self.selection=selection
+		
+		self.selection_map = {
+			"Accession Number": ("ids", ["AccessionNumber"]),
+			"Genome Index": ("ids", ["IDX"]),
+			"Scientific Name": ("taxonomy", ["ScientificName"]),
+			"Taxon Group": ("taxonomy", ["Kingdom", "Phylum", "Class", "'Order'", "Genus", "taxGroup"])
+		}
+
+	# function for checking whether the query is available in the database or not
+	def inDatabase(self):
+		"""
+		Check if the user query is available in the database. Returns a boolean.
+		"""
+		if self.selection in self.selection_map:
+			# get the reference table and columns for the user selection
+			table, columns = self.selection_map[self.selection]
+			# create a string containing all relevant column names for the SQL query
+			all_columns = " OR ".join(f"{col}=?" for col in columns)
+			# set the SQL query
+			db_query = f"SELECT * FROM {table} WHERE {all_columns}"
+			# execute the SQL query with the user query as input
+			self.cursor.execute(db_query, (self.user_query,) * len(columns))
+
+		if self.cursor.fetchone():
+			return True
+		else:
+			return False
+
+	def getIDX(self):
+		"""
+		Get the indices for the user query in the database. Returns a list of integers.
+		"""
+		if self.inDatabase():
+			table, columns = self.selection_map[self.selection]
+			all_columns = " OR ".join(f"{col}=?" for col in columns)
+			db_query = f"SELECT IDX FROM {table} WHERE {all_columns}"
+			self.cursor.execute(db_query, (self.user_query,) * len(columns))
+
+			# get the indices from the database and convert them into a simple list
+			idx_list=self.cursor.fetchall()
+			idx_list=[idx[0] for idx in idx_list]
+
+			return idx_list
+		else:
+			return None
+
+	def getSpeciesInfo(self):
+		"""
+		Get Information on the selected species from the database.
+
+		Returns:
+		- a tuple of strings containing general information
+		- a list of strings containing all available accession numbers
+		- a string containing the taxonomic path
+		- a string containing information on the habitats
+		"""
+
+		idx_list=self.getIDX()
+
+		# database accession for getting basic species information
+		db_query_a = f"SELECT ScientificName, Authority, taxGroup, Vernacular_Eng, Vernacular_Ger FROM taxonomy WHERE IDX=?"
+		self.cursor.execute(db_query_a, (idx_list[0],))
+		info_a=self.cursor.fetchone()
+
+		# database accession for getting the accession numbers
+		idx_str = " OR ".join(f"IDX={idx}" for idx in idx_list)
+		db_query_b = f"SELECT AccessionNumber FROM ids WHERE {idx_str}"
+		self.cursor.execute(db_query_b)
+		info_b=self.cursor.fetchall()
+		acc_list=[acc[0] for acc in info_b]
+
+		# database accession for getting the taxonomic path
+		db_query_c = f"SELECT Kingdom, Phylum, Class, 'Order', Family, Genus FROM taxonomy WHERE IDX=?"
+		self.cursor.execute(db_query_c, (idx_list[0],))
+		info_c=self.cursor.fetchone()
+		# convert the taxonomic path into a string
+		taxpath_str=" > ".join(info_c)
+
+		# database accession for getting the habitat information
+		db_query_d="SELECT isMarine, isBrackish, isFresh, isTerrestrial FROM habitats WHERE IDX = ?"
+		self.cursor.execute(db_query_d, (idx_list[0],))
+		habitat_boolean=self.cursor.fetchone()
+		habitat_names = ["marine", "brackish", "freshwater", "terrestrial"]
+		habitat_list = [habitat_names[i] for i in range(len(habitat_boolean)) if habitat_boolean[i] == 1]
+		if habitat_list!=[]:
+			habitat_str=', '.join(map(str,habitat_list))
+		else:
+			habitat_str=""
+
+		return info_a, acc_list, taxpath_str, habitat_str
+
+	def getTaxgroupInfo(self):
+		"""
+		Get all species belonging to the selected taxon group from the database.
+
+		Returns:
+		- a list of strings containing all scientific names
+		- a string containing the name of the taxon group
+		"""
+
+		if self.inDatabase():
+			table, columns = self.selection_map[self.selection]
+			all_columns = " OR ".join(f"{col}=?" for col in columns)
+			db_query = f"SELECT ScientificName, {', '.join(columns)} FROM {table} WHERE {all_columns}"
+			self.cursor.execute(db_query, (self.user_query,) * len(columns))
+
+			results=self.cursor.fetchall()
+			sci_names=[name[0] for name in results]
+
+			matched_column = ""
+			for col in columns:
+				if any(result[columns.index(col) + 1] == self.user_query for result in results):
+					matched_column = col
+					break
+
+			return sci_names, matched_column
+		else:
+			return [], ""
+
+
 
 # class for searching the input table
 class SearchLibrary:
@@ -30,7 +161,7 @@ class SearchLibrary:
 		import os
 		
 		# set reference table
-		INPUT_TABLE = os.path.join(SCRIPT_DIR, "infolib.xlsx")
+		INPUT_TABLE = os.path.join(SCRIPT_DIR, "data/infolib.xlsx")
 		# get specific columns containing either taxonomic info or habitat info from reference table
 		self.TAXO_LIBRARY = pd.read_excel(INPUT_TABLE,usecols="A:O")
 		
@@ -520,11 +651,16 @@ def internetConnection():
 
 
 if __name__ == "__main__":
-	data=SearchLibrary("Danio rerio","Scientific Name")
-	if internetConnection():
-		wiki=SearchWikipedia("Danio rerio")
-		gbif=SearchGBIF("Danio rerio")
-		ncbi=SearchNCBI("GCA_903684865.1", "Accession Number")
+	#data=SearchLibrary("Danio rerio","Scientific Name")
+	#if internetConnection():
+	#	wiki=SearchWikipedia("Danio rerio")
+	#	gbif=SearchGBIF("Danio rerio")
+	#	ncbi=SearchNCBI("GCA_903684865.1", "Accession Number")
 	
 	print()
 
+	data2=SearchDatabase("Oncorhynchus","Taxon Group")
+	print(data2.inDatabase())
+	print(data2.getIDX())
+	print(data2.getSpeciesInfo())
+	print(data2.getTaxgroupInfo())

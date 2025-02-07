@@ -12,7 +12,7 @@ import pandas as pd
 import os
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_TABLE = os.path.join(SCRIPT_DIR, "infolib.xlsx")
+INPUT_TABLE = os.path.join(SCRIPT_DIR, "data/infolib.xlsx")
 
 class TrieNode:
 	def __init__(self):
