@@ -123,7 +123,7 @@ class WindowContent(tk.Frame):
 				wiki_onoff.set(0)
 				ncbi_onoff.set(0)
 				selector.set("Genome Index")
-				self.input_frame.config(text="Input Genome Index (0-379)")
+				self.input_frame.config(text="Input Genome Index (0-412)")
 				self.text_field.config(width=250,height=40)
 			
 			def _confirm():
@@ -160,7 +160,7 @@ class WindowContent(tk.Frame):
 				# get an object containing all words from the input table
 				self.trie=getSuggestions(selector.get())
 				if selector.get()=="Genome Index":
-					self.input_frame.config(text="Input Genome Index (0-379)")
+					self.input_frame.config(text="Input Genome Index (0-412)")
 				else:
 					self.input_frame.config(text=f"Input {selector.get()}")
 			

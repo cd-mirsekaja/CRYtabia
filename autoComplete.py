@@ -8,11 +8,17 @@ Created on Tue Nov 19 14:33:49 2024
 """
 
 from collections import defaultdict
-import pandas as pd
-import os
+import os, sqlite3
+
+
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_TABLE = os.path.join(SCRIPT_DIR, "data/infolib.xlsx")
+db_file=os.path.join(SCRIPT_DIR,"data/genotree_master_library.db")
+
+# establishes connection to the database
+db_conn=sqlite3.connect(db_file)
+# creates new cursor object to interact with the database
+cursor=db_conn.cursor()
 
 class TrieNode:
 	def __init__(self):
@@ -50,28 +56,25 @@ class Trie:
 			self._find_suggestions(child, prefix + char, suggestions)
 
 
-def load_words(filename):
-	table=pd.read_excel(filename,usecols='A:O')
-	taxgroup_table=pd.read_excel(filename,usecols='C:H, O')
+def load_words():
+
+	acc_numbers=cursor.execute("SELECT AccessionNumber FROM ids").fetchall()
+	acc_numbers=set([acc[0] for acc in acc_numbers])
 	
-	acc_numbers=set(table['AccessionNumber'])
+	genome_ids=cursor.execute("SELECT IDX FROM ids").fetchall()
+	genome_ids=set([str(idx[0]) for idx in genome_ids])
 	
-	genome_ids=set(table['Index'])
-	genome_ids_str=set()
-	for item in genome_ids:
-		genome_ids_str.add(str(item))
+	sci_names=cursor.execute("SELECT ScientificName FROM taxonomy").fetchall()
+	sci_names=set([name[0] for name in sci_names])
 	
-	sci_names=set(table['ScientificName'])
-	
-	taxon_groups=set()
-	for column_name,column in taxgroup_table.items():
-		taxon_groups.update(taxgroup_table[column_name])
-	
-	return acc_numbers, genome_ids_str, sci_names, taxon_groups
+	taxon_groups=cursor.execute("SELECT Kingdom, Phylum, Class, 'Order', Family, Genus, taxGroup FROM taxonomy").fetchall()
+	taxon_groups=set([group for group_tup in taxon_groups for group in group_tup])
+
+	return acc_numbers, genome_ids, sci_names, taxon_groups
 
 
 def getSuggestions(selection):
-	acc_numbers, genome_ids, sci_names, taxon_groups = load_words(INPUT_TABLE)
+	acc_numbers, genome_ids, sci_names, taxon_groups = load_words()
 	trie = Trie()
 	
 	if selection=="Accession Number":
@@ -91,18 +94,4 @@ def getSuggestions(selection):
 
 
 if __name__=='__main__':
-	table=table=pd.read_excel('infolib.xlsx',usecols='A:O')
-	
-	sci_names=set(table['ScientificName'])
-	
-	genome_ids=set(table['Index'])
-	genome_ids_str=set()
-	for item in genome_ids:
-		genome_ids_str.add(str(item))
-	
-	indices=set(table['Index'])
-	indices_str=set()
-	for item in indices:
-		indices_str.add(str(item))
-	
-	print(indices_str)
+	print(getSuggestions("Accession Number"))
