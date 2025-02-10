@@ -14,6 +14,7 @@ from tkinter import ttk
 
 import getInfo
 from mapInterface import MapInterface
+from tableInterface import TableInterface
 from autoComplete import getSuggestions
 
 class MainInterface(tk.Tk):
@@ -23,7 +24,7 @@ class MainInterface(tk.Tk):
 		self.minsize(x,y)
 		#self.maxsize(x,y)
 	
-	def __init__(self,app_title: str, app_version: str, map_version: str):
+	def __init__(self,app_title: str, app_version: str, map_version: str, table_version: str):
 		super().__init__()
 		self.title(f'{app_title} {app_version}')
 		self.resizeWindow(1080, 720)
@@ -31,15 +32,16 @@ class MainInterface(tk.Tk):
 		self.main_frame=tk.Frame(self)
 		self.main_frame.pack(fill='both',expand=True)
 		
-		WindowContent(self.main_frame,map_version)
+		WindowContent(self.main_frame,map_version,table_version)
 
 
 class WindowContent(tk.Frame):
 	
-	def __init__(self,main_frame,map_version):
+	def __init__(self,main_frame,map_version,table_version):
 		super().__init__(main_frame)
 		
 		self.map_version=map_version
+		self.table_version=table_version
 		
 		# option frame (top)
 		self.option_frame=tk.LabelFrame(main_frame, text='Options (*requires internet access)',border=2,relief='solid',font='Helvetica 14 bold')
@@ -194,6 +196,7 @@ class WindowContent(tk.Frame):
 			from tkinter.filedialog import asksaveasfilename
 			
 			self.map_window_open=False
+			self.table_window_open=False
 			
 			def saveOutput():
 				FILE_TYPES=[("Simple Text Files","*.txt"),("Complex Text Files","*.rtf")]
@@ -233,10 +236,23 @@ class WindowContent(tk.Frame):
 					self.text_field.insert(1.0,"\nNo Internet Connection available, map creation not possible.\n\n-------------------------------------------------------------\n")
 					self.text_field.config(state="disabled")
 			
+			def viewDatabase():
+				# function for destroying the window after it has been closed
+				def onTableClose():
+					self.table_window.destroy()
+					self.table_window_open=False
+				
+				if not self.table_window_open:
+					self.table_window=TableInterface(self.table_version)
+					self.table_window.protocol('WM_DELETE_WINDOW',lambda: onTableClose())
+					self.table_window_open=True
+				else:
+					self.table_window.focus_set()
+
 			ttk.Separator(self.inputselect_frame,orient='horizontal')
 			
 			ttk.Button(self.inputselect_frame,text="Map Editor*",command=lambda: editMap(user_input, selection))
-			#ttk.Button(self.inputselect_frame,text="Table Editor (WIP)")
+			ttk.Button(self.inputselect_frame,text="Database Viewer (WIP)", command=lambda: viewDatabase())
 			ttk.Button(self.inputselect_frame,text="Save Output to File",command=lambda: saveOutput())
 			
 			for widget in self.inputselect_frame.winfo_children():
@@ -297,6 +313,6 @@ class WindowContent(tk.Frame):
 
 
 if __name__ == "__main__":
-	main_window=MainInterface('CRYtabia','[only for testing]','[only for testing]')
+	main_window=MainInterface('CRYtabia','[only for testing]','[only for testing]','[only for testing]')
 	main_window.focus_set()
 	main_window.mainloop()
