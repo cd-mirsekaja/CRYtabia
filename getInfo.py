@@ -30,7 +30,7 @@ class SearchDatabase:
 		# creates new cursor object to interact with the database
 		self.cursor=db_conn.cursor()
 
-		self.user_query=query
+		self.user_query=query.capitalize() if selection!="Accession Number" else query
 		self.selection=selection
 		
 		self.selection_map = {
@@ -290,8 +290,7 @@ def getText(selection,query,gbif_state,ncbi_state,wiki_state,table_state):
 	sciName=""
 	sciNames=[]
 	# create an object for the table search class
-	#search_table=SearchLibrary(query.get().capitalize(),selection.get())
-	search_table=SearchDatabase(query.get().capitalize(),selection.get())
+	search_table=SearchDatabase(query.get(),selection.get())
 	
 	# function for changing the output sentence on vernaculars depending on which are available
 	def vernacular_text(engName,gerName):
@@ -425,7 +424,6 @@ def getText(selection,query,gbif_state,ncbi_state,wiki_state,table_state):
 
 
 def getSciName(query,selection):
-	#search_table=SearchLibrary(query.get().capitalize(),selection.get())
 	search_table=SearchDatabase(query.get().capitalize(),selection.get())
 	if search_table.inDatabase():
 		if selection.get()!="Taxon Group":
@@ -450,18 +448,11 @@ def internetConnection():
 
 
 if __name__ == "__main__":
-	#data=SearchLibrary("Danio rerio","Scientific Name")
-	#if internetConnection():
-	#	wiki=SearchWikipedia("Danio rerio")
-	#	gbif=SearchGBIF("Danio rerio")
-	#	ncbi=SearchNCBI("GCA_903684865.1", "Accession Number")
-	
-	print()
-
-	data2=SearchDatabase("Oncorhynchus mykiss","Scientific Name")
-	print(data2.inDatabase())
-	print(data2.getIDX())
-	print(data2.getSpeciesInfo())
-	print(data2.getTaxgroupInfo())
+	# test the functions
+	data=SearchDatabase("GCA_001455555.1","Accession Number")
+	print(data.inDatabase())
+	print(data.getIDX())
+	print(data.getSpeciesInfo())
+	#print(data2.getTaxgroupInfo())
 
 	print()
