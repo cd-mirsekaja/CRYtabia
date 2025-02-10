@@ -21,3 +21,4 @@ previous_versions/.DS_Store
 test_scripts
 
 __pycache__/autoComplete.cpython-311.pyc
+__pycache__/tableInterface.cpython-311.pyc
