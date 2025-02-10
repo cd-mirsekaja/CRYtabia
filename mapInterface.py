@@ -66,7 +66,7 @@ class WindowContent(tk.Frame):
 	
 	def generateMap(self):
 		if internetConnection():
-			search_map=SearchGBIF(self.name_input.get())
+			search_map=SearchGBIF(self.name_input.get(),self.selection)
 			self.map_path=search_map.makeMap(style=self.style_selector.get(),bin=self.aggregation_selector.get(),year=self.year_input)
 			
 			if self.map_path!="":
