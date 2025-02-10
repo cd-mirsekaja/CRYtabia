@@ -13,13 +13,14 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 from datetime import datetime
 from tkinter.filedialog import asksaveasfilename
+from autoComplete import getSuggestions
 import os
 
 from getInfo import SearchGBIF,internetConnection
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-MAP_ADDON_VERSION = "0.3.0"
+MAP_ADDON_VERSION = "0.4.0"
 
 class MapInterface(tk.Toplevel):
 	
@@ -113,17 +114,44 @@ class WindowContent(tk.Frame):
 			
 			if not savepath:
 				return
-			
-			
+
 			self.export_map.save(savepath)
 			
-			
-		
 		tk.Label(self.option_frame,text="Input Taxon")
 		# field to input new species
 		self.name_input=tk.Entry(self.option_frame,width=25)
 		self.name_input.insert(0, self.selection)
+
+		# listbox field for autocomplete
+		autocomplete_field=tk.Listbox(self.option_frame,width=25,height=5,border=0)
 		
+		# get an object containing all words from the input table
+		self.trie=getSuggestions("Scientific Name")
+		# function for updating the autocomplete suggestions
+		def _updateSuggestions(event, trie, entry, autocomplete_field):
+			prefix = entry.get()
+			if not prefix:
+				autocomplete_field.delete(0, tk.END)
+				return
+			suggestions = trie.search(prefix)
+			autocomplete_field.delete(0, tk.END)
+			for suggestion in suggestions:
+				autocomplete_field.insert(tk.END, suggestion)
+		
+		# function for inserting the selected word into the entry field
+		def _clickEntry(event,entry,autocomplete_field):
+			cursor=autocomplete_field.curselection()
+			
+			selection=autocomplete_field.get(cursor)
+			entry.delete(0,tk.END)
+			entry.insert(0,selection)
+		
+		# binds the release of a key in the entry field to update the autocomplete suggestions
+		self.name_input.bind("<KeyRelease>", lambda event: _updateSuggestions(event, self.trie, self.name_input, autocomplete_field))
+		# binds double click and tab while an entry in the listbox is selected to insert that entry into the input field
+		autocomplete_field.bind('<Double-1>',lambda event: _clickEntry(event, self.name_input, autocomplete_field))
+		autocomplete_field.bind('<Tab>',lambda event: _clickEntry(event, self.name_input, autocomplete_field))
+
 		ttk.Separator(self.option_frame,orient='horizontal')
 		
 		tk.Label(self.option_frame,text="Choose Map Style")
