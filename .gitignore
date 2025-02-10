@@ -1,6 +1,9 @@
 
 .DS_Store
+.idea
 .eggs
+.spyproject
+__pycache__
 .eggs/.DS_Store
 .eggs/altgraph-0.17.4-py3.9.egg/.DS_Store
 .eggs/macholib-1.16.3-py3.9.egg/.DS_Store
@@ -9,16 +12,7 @@
 .spyproject/.DS_Store
 .spyproject/config/.DS_Store
 .gitignore
-.ideas
-__pycache__/complexMap.cpython-311.pyc
-__pycache__/getInfo.cpython-311.pyc
-__pycache__/mainInterface.cpython-311.pyc
-__pycache__/makeInterface.cpython-311.pyc
-__pycache__/mapInterface.cpython-311.pyc
-__pycache__/setup.cpython-311.pyc
+
 images/.DS_Store
 previous_versions/.DS_Store
 test_scripts
-
-__pycache__/autoComplete.cpython-311.pyc
-__pycache__/tableInterface.cpython-311.pyc
