@@ -10,11 +10,9 @@ Created on Fri Oct 25 12:58:07 2024
 #import tkinter for managing GUI
 import tkinter as tk
 from tkinter import ttk
-from datetime import datetime
 from tkinter.filedialog import asksaveasfilename
 import os, sqlite3
 
-from getInfo import SearchGBIF,internetConnection
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -30,7 +28,7 @@ class TableInterface(tk.Toplevel):
 	def __init__(self, comment: str):
 		super().__init__()
 		self.title(f"Database Viewer {comment}")
-		self.resizeWindow(1080, 720)
+		self.resizeWindow(830, 900)
 		
 		main_frame=tk.Frame(self)
 		main_frame.pack(fill='both',expand=True)
@@ -43,13 +41,14 @@ class WindowContent(tk.Frame):
 	def __init__(self,main_frame):
 		super().__init__(main_frame)
 		
-		self.table_frame=tk.LabelFrame(main_frame,text="Table",height=650,width=800)
+		self.table_frame=tk.LabelFrame(main_frame,text="Table",height=540,width=780)
 		self.table_frame.pack_propagate(False)
-		self.option_frame=tk.LabelFrame(main_frame,text="Options",height=250,width=150)
-		self.option_frame.pack_propagate(False)
+		self.option_frame=tk.LabelFrame(main_frame,text="Options",height=200,width=780)
+		self.option_frame.columnconfigure(0, weight=1)
+		self.option_frame.columnconfigure(1, weight=1)
 
-		self.option_frame.grid(column=1,row=1,sticky='wne',padx=25,pady=25)
-		self.table_frame.grid(column=2,row=1,sticky='enw',padx=25,pady=25)
+		self.option_frame.grid(column=1,row=1,sticky='wne',padx=25,pady=10, ipady=10)
+		self.table_frame.grid(column=1,row=2,sticky='enw',padx=25,pady=10)
 
 		db_conn = sqlite3.connect(os.path.join(SCRIPT_DIR, "data/genotree_master_library.db"))
 		self.cursor = db_conn.cursor()
@@ -63,7 +62,6 @@ class WindowContent(tk.Frame):
 		self.optionsArea()
 		self.tableView()
 
-
 	def updateTableView(self):
 		selection=self.table_selector.get()
 		query=f"SELECT * FROM {selection}"
@@ -75,7 +73,7 @@ class WindowContent(tk.Frame):
 			self.tax_tree.heading(i, text=col)
 
 			# set the column width to the longest item in the column
-			max_width = len(col) * 10  # start with the header width
+			max_width = len(col) * 12  # start with the header width
 			for row in rows:
 				cell_value = str(row[i])
 				cell_width = len(cell_value) * 8
@@ -107,14 +105,33 @@ class WindowContent(tk.Frame):
 
 		self.updateTableView()	
 		
-	
 	def optionsArea(self):
-		tk.Label(self.option_frame,text="Choose Table").pack(side='top',fill='x')
+		def executeQuery(query):
+			self.cursor.execute(query)
+			rows=self.cursor.fetchall()
+			
+			self.query_output_field.delete(1.0, tk.END)
+			self.query_output_field.insert(tk.END, rows)
+
+			self.updateTableView()
+
+
+		tk.Label(self.option_frame,text="Choose Table").grid(column=0,row=0,sticky='nw',padx=10,pady=10)
 
 		self.table_selector=tk.StringVar()
 		self.table_selector.set("taxonomy")
 		table_menu=tk.OptionMenu(self.option_frame, self.table_selector, *self.column_names.keys(), command=lambda event: self.updateTableView())
-		table_menu.pack(side='top',fill='x',pady=10,padx=10)
+		table_menu.grid(column=0,row=1,sticky='nwe',padx=10,columnspan=2)
+
+		tk.Label(self.option_frame,text="Enter SQL Query").grid(column=0,row=2,sticky='nw',padx=10,pady=10)
+		query_field=tk.Entry(self.option_frame,width=50)
+		query_field.grid(column=0,row=3,sticky='nwe',padx=10)
+		query_field.insert(0, "SELECT * FROM taxonomy")
+
+		ttk.Button(self.option_frame,text="Execute Query",command=lambda: executeQuery(query_field.get())).grid(column=1,row=3,sticky='nwe',padx=10)
+
+		self.query_output_field=tk.Text(self.option_frame,height=10)
+		self.query_output_field.grid(column=0,row=4,sticky='nwe',padx=10,columnspan=2)
 
 		def switchSelection(selector, selection):
 			selector.set(selection)
