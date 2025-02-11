@@ -125,19 +125,21 @@ class WindowContent(tk.Frame):
 		table_menu=tk.OptionMenu(self.option_frame, self.table_selector, *self.column_names.keys(), command=lambda event: self.updateTableView())
 		table_menu.grid(column=1,row=1,sticky='nwe',padx=10,columnspan=2)
 
-		tk.Label(self.option_frame,text="Enter SQL Query").grid(column=1,row=2,sticky='nw',padx=10,pady=5)
-		self.query_field=tk.Entry(self.option_frame,width=50)
-		self.query_field.grid(column=1,row=3,sticky='nwe',padx=10)
+		ttk.Separator(self.option_frame,orient='horizontal').grid(column=1,row=2,sticky='we',padx=10,pady=5,columnspan=3)
 
-		ttk.Button(self.option_frame,text="Execute Query",command=lambda: executeQuery(self.query_field.get())).grid(column=2,row=3,sticky='nwe',padx=10)
+		tk.Label(self.option_frame,text="Enter SQL Query").grid(column=1,row=3,sticky='nw',padx=10)
+		self.query_field=tk.Entry(self.option_frame,width=50)
+		self.query_field.grid(column=1,row=4,sticky='nwe',padx=10)
+
+		ttk.Button(self.option_frame,text="Execute Query",command=lambda: executeQuery(self.query_field.get())).grid(column=2,row=4,sticky='nwe',padx=10)
 
 		
 		y_scroll_text=ttk.Scrollbar(self.option_frame,orient='vertical')
-		y_scroll_text.grid(column=0,row=4,sticky='nes')
+		y_scroll_text.grid(column=0,row=5,sticky='nes')
 		
 		self.query_output_field=tk.Text(self.option_frame,height=10)
 		self.query_output_field.config(yscrollcommand=y_scroll_text.set)
-		self.query_output_field.grid(column=1,row=4,sticky='nwes',padx=5,columnspan=2)
+		self.query_output_field.grid(column=1,row=5,sticky='nwes',padx=5,columnspan=2)
 		
 		y_scroll_text.config(command=self.query_output_field.yview)
 

@@ -151,7 +151,7 @@ class WindowContent(tk.Frame):
 			# make it so that the content can be cleared by pressing escape
 			self.button_frame.bind_all("<Escape>",lambda x: _reset())
 			# make it so that all text is cleared by pressing command and backspace
-			self.button_frame.bind_all("<Command-Key-BackSpace>",lambda x: _clearText())
+			self.button_frame.bind_all("<Control-Key-BackSpace>",lambda x: _clearText())
 			
 			
 		# function for choosing the input method and getting the user input
@@ -252,25 +252,30 @@ class WindowContent(tk.Frame):
 			ttk.Separator(self.inputselect_frame,orient='horizontal')
 			
 			ttk.Button(self.inputselect_frame,text="Map Editor*",command=lambda: editMap(user_input, selection))
-			ttk.Button(self.inputselect_frame,text="Database Viewer (WIP)", command=lambda: viewDatabase())
+			ttk.Button(self.inputselect_frame,text="Database Viewer", command=lambda: viewDatabase())
 			ttk.Button(self.inputselect_frame,text="Save Output to File",command=lambda: saveOutput())
 			
 			for widget in self.inputselect_frame.winfo_children():
 				if '!labelframe.!button' in str(widget) or '!labelframe.!separator' in str(widget):
 					widget.pack(side='top',expand=0,fill='x',padx=10,pady=5)
+			
+			# bind keyboard shortcuts for the buttons
+			self.inputselect_frame.bind_all("<Control-Key-m>", lambda event: editMap(user_input, selection))
+			self.inputselect_frame.bind_all("<Control-Key-d>", lambda event: viewDatabase())
+			self.inputselect_frame.bind_all("<Control-Key-s>", lambda event: saveOutput())
 		
 		#function for the checkbuttons in the Options column
 		def chooseOptions():
 			
 			# checkbox for disabling table search
 			table_onoff=tk.IntVar()
-			enable_table=tk.Checkbutton(self.extraoptions_frame,text='Search table',variable=table_onoff, onvalue=1, offvalue=0)
+			enable_table=tk.Checkbutton(self.extraoptions_frame,text='Search integrated database',variable=table_onoff, onvalue=1, offvalue=0)
 			table_onoff.set(1)
 			enable_table.grid(row=0,column=3,padx=10,sticky="nw")
 			
 			# checkbox for enabling GBIF search
 			gbif_onoff=tk.IntVar()
-			enable_gbif=tk.Checkbutton(self.extraoptions_frame,text='Search GBIF Backbone*',variable=gbif_onoff, onvalue=1, offvalue=0)
+			enable_gbif=tk.Checkbutton(self.extraoptions_frame,text='Search GBIF backbone*',variable=gbif_onoff, onvalue=1, offvalue=0)
 			enable_gbif.grid(row=1,column=3,padx=10,sticky="nw")
 			
 			# checkbox for enabling Wikipedia search
@@ -292,10 +297,10 @@ class WindowContent(tk.Frame):
 					stateswitch.set(1)
 			
 			# keybindings for checkbutton-switching
-			self.extraoptions_frame.bind_all("<Command-Key-t>", lambda event: switchState(table_onoff, event))
-			self.extraoptions_frame.bind_all("<Command-Key-j>", lambda event: switchState(gbif_onoff, event))
-			self.extraoptions_frame.bind_all("<Command-Key-k>", lambda event: switchState(wiki_onoff, event))
-			self.extraoptions_frame.bind_all("<Command-Key-l>", lambda event: switchState(ncbi_onoff, event))
+			self.extraoptions_frame.bind_all("<Control-Key-t>", lambda event: switchState(table_onoff, event))
+			self.extraoptions_frame.bind_all("<Control-Key-j>", lambda event: switchState(gbif_onoff, event))
+			self.extraoptions_frame.bind_all("<Control-Key-k>", lambda event: switchState(wiki_onoff, event))
+			self.extraoptions_frame.bind_all("<Control-Key-l>", lambda event: switchState(ncbi_onoff, event))
 			
 			return gbif_onoff,ncbi_onoff,wiki_onoff,table_onoff
 		
