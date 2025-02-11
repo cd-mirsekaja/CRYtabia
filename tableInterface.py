@@ -44,10 +44,11 @@ class WindowContent(tk.Frame):
 		self.table_frame=tk.LabelFrame(main_frame,text="Table",height=540,width=780)
 		self.table_frame.pack_propagate(False)
 		self.option_frame=tk.LabelFrame(main_frame,text="Options",height=200,width=780)
-		self.option_frame.columnconfigure(0, weight=1)
+		self.option_frame.columnconfigure(0, weight=0)
 		self.option_frame.columnconfigure(1, weight=1)
+		self.option_frame.columnconfigure(2, weight=1)
 
-		self.option_frame.grid(column=1,row=1,sticky='wne',padx=25,pady=10, ipady=10)
+		self.option_frame.grid(column=1,row=1,sticky='wne',padx=25,pady=10,ipadx=10, ipady=10)
 		self.table_frame.grid(column=1,row=2,sticky='enw',padx=25,pady=10)
 
 		db_conn = sqlite3.connect(os.path.join(SCRIPT_DIR, "data/genotree_master_library.db"))
@@ -117,21 +118,28 @@ class WindowContent(tk.Frame):
 			self.query_output_field.insert(tk.END, rows)
 
 
-		tk.Label(self.option_frame,text="Choose Table").grid(column=0,row=0,sticky='nw',padx=10,pady=5)
+		tk.Label(self.option_frame,text="Choose Table").grid(column=1,row=0,sticky='nw',padx=10,pady=5)
 
 		self.table_selector=tk.StringVar()
 		self.table_selector.set("taxonomy")
 		table_menu=tk.OptionMenu(self.option_frame, self.table_selector, *self.column_names.keys(), command=lambda event: self.updateTableView())
-		table_menu.grid(column=0,row=1,sticky='nwe',padx=10,columnspan=2)
+		table_menu.grid(column=1,row=1,sticky='nwe',padx=10,columnspan=2)
 
-		tk.Label(self.option_frame,text="Enter SQL Query").grid(column=0,row=2,sticky='nw',padx=10,pady=5)
+		tk.Label(self.option_frame,text="Enter SQL Query").grid(column=1,row=2,sticky='nw',padx=10,pady=5)
 		self.query_field=tk.Entry(self.option_frame,width=50)
-		self.query_field.grid(column=0,row=3,sticky='nwe',padx=10)
+		self.query_field.grid(column=1,row=3,sticky='nwe',padx=10)
 
-		ttk.Button(self.option_frame,text="Execute Query",command=lambda: executeQuery(self.query_field.get())).grid(column=1,row=3,sticky='nwe',padx=10)
+		ttk.Button(self.option_frame,text="Execute Query",command=lambda: executeQuery(self.query_field.get())).grid(column=2,row=3,sticky='nwe',padx=10)
 
+		
+		y_scroll_text=ttk.Scrollbar(self.option_frame,orient='vertical')
+		y_scroll_text.grid(column=0,row=4,sticky='nes')
+		
 		self.query_output_field=tk.Text(self.option_frame,height=10)
-		self.query_output_field.grid(column=0,row=4,sticky='nwe',padx=10,columnspan=2)
+		self.query_output_field.config(yscrollcommand=y_scroll_text.set)
+		self.query_output_field.grid(column=1,row=4,sticky='nwes',padx=5,columnspan=2)
+		
+		y_scroll_text.config(command=self.query_output_field.yview)
 
 		def switchSelection(selector, selection):
 			selector.set(selection)
