@@ -86,6 +86,9 @@ class WindowContent(tk.Frame):
 		self.tax_tree.delete(*self.tax_tree.get_children())
 		for row in rows:
 			self.tax_tree.insert("", tk.END, values=row)
+		
+		self.query_field.delete(0, tk.END)
+		self.query_field.insert(0, f"SELECT * FROM {selection}")
 	
 	def tableView(self):
 
@@ -113,22 +116,19 @@ class WindowContent(tk.Frame):
 			self.query_output_field.delete(1.0, tk.END)
 			self.query_output_field.insert(tk.END, rows)
 
-			self.updateTableView()
 
-
-		tk.Label(self.option_frame,text="Choose Table").grid(column=0,row=0,sticky='nw',padx=10,pady=10)
+		tk.Label(self.option_frame,text="Choose Table").grid(column=0,row=0,sticky='nw',padx=10,pady=5)
 
 		self.table_selector=tk.StringVar()
 		self.table_selector.set("taxonomy")
 		table_menu=tk.OptionMenu(self.option_frame, self.table_selector, *self.column_names.keys(), command=lambda event: self.updateTableView())
 		table_menu.grid(column=0,row=1,sticky='nwe',padx=10,columnspan=2)
 
-		tk.Label(self.option_frame,text="Enter SQL Query").grid(column=0,row=2,sticky='nw',padx=10,pady=10)
-		query_field=tk.Entry(self.option_frame,width=50)
-		query_field.grid(column=0,row=3,sticky='nwe',padx=10)
-		query_field.insert(0, "SELECT * FROM taxonomy")
+		tk.Label(self.option_frame,text="Enter SQL Query").grid(column=0,row=2,sticky='nw',padx=10,pady=5)
+		self.query_field=tk.Entry(self.option_frame,width=50)
+		self.query_field.grid(column=0,row=3,sticky='nwe',padx=10)
 
-		ttk.Button(self.option_frame,text="Execute Query",command=lambda: executeQuery(query_field.get())).grid(column=1,row=3,sticky='nwe',padx=10)
+		ttk.Button(self.option_frame,text="Execute Query",command=lambda: executeQuery(self.query_field.get())).grid(column=1,row=3,sticky='nwe',padx=10)
 
 		self.query_output_field=tk.Text(self.option_frame,height=10)
 		self.query_output_field.grid(column=0,row=4,sticky='nwe',padx=10,columnspan=2)
@@ -141,6 +141,7 @@ class WindowContent(tk.Frame):
 		self.option_frame.bind_all("<Command-Key-1>", lambda event: switchSelection(self.table_selector, "taxonomy"))
 		self.option_frame.bind_all("<Command-Key-2>", lambda event: switchSelection(self.table_selector, "habitats"))
 		self.option_frame.bind_all("<Command-Key-3>", lambda event: switchSelection(self.table_selector, "ids"))
+		self.option_frame.bind_all("<Return>", lambda event: executeQuery(self.query_field.get()))
 
 
 
