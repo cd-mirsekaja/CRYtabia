@@ -112,7 +112,7 @@ class SearchDatabase:
 		taxpath_str=" > ".join(info_c)
 
 		# database accession for getting the habitat information
-		db_query_d="SELECT isMarine, isBrackish, isFresh, isTerrestrial FROM habitats WHERE IDX = ?"
+		db_query_d="SELECT isMarine, isBrackish, isFresh, isTerrestrial FROM traits WHERE IDX = ?"
 		self.cursor.execute(db_query_d, (idx_list[0],))
 		habitat_boolean=self.cursor.fetchone()
 		habitat_names = ["marine", "brackish", "freshwater", "terrestrial"]
