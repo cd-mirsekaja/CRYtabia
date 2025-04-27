@@ -16,19 +16,20 @@ import getInfo
 from mapInterface import MapInterface
 from tableInterface import TableInterface
 from autoComplete import getSuggestions
-from GeDaMa.mainInterface import DatabaseMakerInterface
+from setup import DB_FILE
+from GeDaMa.src.mainInterface import DatabaseMakerInterface
 
 class MainInterface(tk.Tk):
 	
-	def resizeWindow(self,x: int, y: int):
+	def resizeWindow(self, x: int, y: int, min: bool=True, max: bool=True):
 		self.geometry(f'{x}x{y}')
-		self.minsize(x,y)
-		#self.maxsize(x,y)
+		self.minsize(x,y) if min else None
+		self.maxsize(x,y) if max else None
 	
 	def __init__(self,app_title: str, app_version: str, map_version: str, table_version: str):
 		super().__init__()
 		self.title(f'{app_title} {app_version}')
-		self.resizeWindow(1080, 720)
+		self.resizeWindow(1080, 720, max=False)
 		
 		self.main_frame=tk.Frame(self)
 		self.main_frame.pack(fill='both',expand=True)
@@ -200,7 +201,7 @@ class WindowContent(tk.Frame):
 			self.table_window_open=False
 			self.database_maker_window_open=False
 			
-			def saveOutput():
+			def _saveOutput():
 				FILE_TYPES=[("Simple Text Files","*.txt"),("Complex Text Files","*.rtf")]
 				filepath=asksaveasfilename(filetypes=FILE_TYPES)
 				
@@ -211,7 +212,7 @@ class WindowContent(tk.Frame):
 					content=self.text_field.get(1.0,tk.END)
 					file.write(content)
 			
-			def editMap(user_input, selection):
+			def _editMap(user_input, selection):
 				# function for destroying the window after it has been closed
 				def onMapClose():
 					self.map_window.destroy()
@@ -238,7 +239,7 @@ class WindowContent(tk.Frame):
 					self.text_field.insert(1.0,"\nNo Internet Connection available, map creation not possible.\n\n-------------------------------------------------------------\n")
 					self.text_field.config(state="disabled")
 			
-			def viewDatabase():
+			def _viewDatabase():
 				# function for destroying the window after it has been closed
 				def onTableClose():
 					self.table_window.destroy()
@@ -251,14 +252,14 @@ class WindowContent(tk.Frame):
 				else:
 					self.table_window.focus_set()
 
-			def makeDatabase():
+			def _makeDatabase():
 				# function for destroying the window after it has been closed
 				def onDatabaseClose():
 					self.database_maker_window.destroy()
 					self.database_maker_window_open=False
 				
 				if not self.database_maker_window_open:
-					self.database_maker_window=DatabaseMakerInterface("Configure Database")
+					self.database_maker_window=DatabaseMakerInterface(DB_FILE, "Database Configuration")
 					self.database_maker_window.protocol('WM_DELETE_WINDOW',lambda: onDatabaseClose())
 					self.database_maker_window_open=True
 				else:
@@ -266,19 +267,19 @@ class WindowContent(tk.Frame):
 
 			ttk.Separator(self.inputselect_frame,orient='horizontal')
 			
-			ttk.Button(self.inputselect_frame,text="Map Editor*",command=lambda: editMap(user_input, selection))
-			ttk.Button(self.inputselect_frame,text="Database Viewer", command=lambda: viewDatabase())
-			ttk.Button(self.inputselect_frame,text="Database Maker",command=lambda: makeDatabase())
-			ttk.Button(self.inputselect_frame,text="Save Output to File",command=lambda: saveOutput())
+			ttk.Button(self.inputselect_frame,text="Map Editor*",command=lambda: _editMap(user_input, selection))
+			#ttk.Button(self.inputselect_frame,text="View Database", command=lambda: _viewDatabase())
+			ttk.Button(self.inputselect_frame,text="Configure Database",command=lambda: _makeDatabase())
+			ttk.Button(self.inputselect_frame,text="Save Output to File",command=lambda: _saveOutput())
 			
 			for widget in self.inputselect_frame.winfo_children():
 				if '!labelframe.!button' in str(widget) or '!labelframe.!separator' in str(widget):
 					widget.pack(side='top',expand=0,fill='x',padx=10,pady=5)
 			
 			# bind keyboard shortcuts for the buttons
-			self.inputselect_frame.bind_all("<Control-Key-m>", lambda event: editMap(user_input, selection))
-			self.inputselect_frame.bind_all("<Control-Key-d>", lambda event: viewDatabase())
-			self.inputselect_frame.bind_all("<Control-Key-s>", lambda event: saveOutput())
+			self.inputselect_frame.bind_all("<Control-Key-m>", lambda event: _editMap(user_input, selection))
+			self.inputselect_frame.bind_all("<Control-Key-d>", lambda event: _viewDatabase())
+			self.inputselect_frame.bind_all("<Control-Key-s>", lambda event: _saveOutput())
 		
 		#function for the checkbuttons in the Options column
 		def chooseOptions():

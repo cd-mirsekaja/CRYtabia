@@ -9,12 +9,12 @@ Main script for CRYtabia.
 """
 
 # import custom functions for constructing interface
-from .mainInterface import MainInterface
+from mainInterface import MainInterface
 
 # import the program name and version from the setup file
-from .setup import NAME, VERSION
-from .mapInterface import MAP_ADDON_VERSION
-from .tableInterface import TABLE_ADDON_VERSION
+from setup import NAME, VERSION
+from mapInterface import MAP_ADDON_VERSION
+from tableInterface import TABLE_ADDON_VERSION
 
 # turn the imported program info into strings
 program_name=str(NAME[0])

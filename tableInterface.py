@@ -12,9 +12,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter.filedialog import asksaveasfilename
 import os, sqlite3
-
-
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+from setup import DB_FILE
 
 TABLE_ADDON_VERSION = "0.1.1"
 
@@ -51,7 +49,7 @@ class WindowContent(tk.Frame):
 		self.option_frame.grid(column=1,row=1,sticky='wne',padx=25,pady=10,ipadx=10, ipady=10)
 		self.table_frame.grid(column=1,row=2,sticky='enw',padx=25,pady=10)
 
-		db_conn = sqlite3.connect(os.path.join(SCRIPT_DIR, "data/genotree_master_library.db"))
+		db_conn = sqlite3.connect(DB_FILE)
 		self.cursor = db_conn.cursor()
 
 		self.column_names = {

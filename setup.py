@@ -6,6 +6,7 @@ Usage:
 """
 
 from setuptools import setup
+import os
 
 
 
@@ -23,6 +24,8 @@ OPTIONS = {
 	
 	}
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_FILE = os.path.join(SCRIPT_DIR, "data/genotree_master_library.db")
 
 if __name__=='__main__':
 	setup(

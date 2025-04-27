@@ -14,19 +14,14 @@ This module extracts data from multiple sources:
 
 # import libraries
 import os, requests, sqlite3
-
-
-# get script directory
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+from setup import DB_FILE
 
 # class for searching the core database
 class SearchDatabase:
 
 	def __init__(self,query: str,selection: str):
-		db_file=os.path.join(SCRIPT_DIR,"data/genotree_master_library.db")
-
 		# establishes connection to the database
-		db_conn=sqlite3.connect(db_file)
+		db_conn=sqlite3.connect(DB_FILE)
 		# creates new cursor object to interact with the database
 		self.cursor=db_conn.cursor()
 
@@ -37,7 +32,7 @@ class SearchDatabase:
 			"Accession Number": ("ids", ["AccessionNumber"]),
 			"Genome Index": ("ids", ["IDX"]),
 			"Scientific Name": ("taxonomy", ["ScientificName"]),
-			"Taxon Group": ("taxonomy", ["Kingdom", "Phylum", "Class", "'Order'", "Genus", "taxGroup"])
+			"Taxon Group": ("taxonomy", ["Kingdom", "Phylum", "Class", "taxOrder", "Genus"])
 		}
 
 	# function for checking whether the query is available in the database or not

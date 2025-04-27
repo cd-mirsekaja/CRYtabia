@@ -24,10 +24,10 @@ MAP_ADDON_VERSION = "0.4.0"
 
 class MapInterface(tk.Toplevel):
 	
-	def resizeWindow(self,x: int, y: int):
+	def resizeWindow(self, x: int, y: int, min: bool=True, max: bool=True):
 		self.geometry(f'{x}x{y}')
-		self.minsize(x,y)
-		self.maxsize(x,y)
+		self.minsize(x,y) if min else None
+		self.maxsize(x,y) if max else None
 	
 	def __init__(self, selection: str, comment: str):
 		super().__init__()

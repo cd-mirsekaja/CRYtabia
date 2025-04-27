@@ -10,13 +10,10 @@ Created on Tue Nov 19 14:33:49 2024
 from collections import defaultdict
 import os, sqlite3
 
-
-
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-db_file=os.path.join(SCRIPT_DIR,"data/genotree_master_library.db")
+from setup import DB_FILE
 
 # establishes connection to the database
-db_conn=sqlite3.connect(db_file)
+db_conn=sqlite3.connect(DB_FILE)
 # creates new cursor object to interact with the database
 cursor=db_conn.cursor()
 
