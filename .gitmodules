@@ -1,0 +1,3 @@
+[submodule "GeDaMa"]
+	path = GeDaMa
+	url = https://github.com/cd-mirsekaja/GeDaMa
