@@ -16,7 +16,7 @@ from setup import NAME, VERSION
 from mapInterface import MAP_ADDON_VERSION
 from tableInterface import TABLE_ADDON_VERSION
 
-# turn the importet program info into strings
+# turn the imported program info into strings
 program_name=str(NAME[0])
 program_version=str(VERSION[0])
 
