@@ -16,6 +16,7 @@ import getInfo
 from mapInterface import MapInterface
 from tableInterface import TableInterface
 from autoComplete import getSuggestions
+from GeDaMa.mainInterface import DatabaseMakerInterface
 
 class MainInterface(tk.Tk):
 	
@@ -197,6 +198,7 @@ class WindowContent(tk.Frame):
 			
 			self.map_window_open=False
 			self.table_window_open=False
+			self.database_maker_window_open=False
 			
 			def saveOutput():
 				FILE_TYPES=[("Simple Text Files","*.txt"),("Complex Text Files","*.rtf")]
@@ -249,10 +251,24 @@ class WindowContent(tk.Frame):
 				else:
 					self.table_window.focus_set()
 
+			def makeDatabase():
+				# function for destroying the window after it has been closed
+				def onDatabaseClose():
+					self.database_maker_window.destroy()
+					self.database_maker_window_open=False
+				
+				if not self.database_maker_window_open:
+					self.database_maker_window=DatabaseMakerInterface("Configure Database")
+					self.database_maker_window.protocol('WM_DELETE_WINDOW',lambda: onDatabaseClose())
+					self.database_maker_window_open=True
+				else:
+					self.database_maker_window.focus_set()
+
 			ttk.Separator(self.inputselect_frame,orient='horizontal')
 			
 			ttk.Button(self.inputselect_frame,text="Map Editor*",command=lambda: editMap(user_input, selection))
 			ttk.Button(self.inputselect_frame,text="Database Viewer", command=lambda: viewDatabase())
+			ttk.Button(self.inputselect_frame,text="Database Maker",command=lambda: makeDatabase())
 			ttk.Button(self.inputselect_frame,text="Save Output to File",command=lambda: saveOutput())
 			
 			for widget in self.inputselect_frame.winfo_children():
