@@ -199,8 +199,7 @@ class WindowContent(tk.Frame):
 			from tkinter.filedialog import asksaveasfilename
 			
 			self.map_window_open=False
-			self.table_window_open=False
-			self.database_maker_window_open=False
+			self.database_window_open=False
 			
 			def _saveOutput():
 				FILE_TYPES=[("Simple Text Files","*.txt"),("Complex Text Files","*.rtf")]
@@ -221,7 +220,6 @@ class WindowContent(tk.Frame):
 				
 				# only execute if an internet connection is available
 				if getInfo.internetConnection():
-					
 					# only execute if the map window is not open already
 					if not self.map_window_open:
 						# only execute if something was inputted
@@ -239,38 +237,24 @@ class WindowContent(tk.Frame):
 					self.text_field.config(state="normal")
 					self.text_field.insert(1.0,"\nNo Internet Connection available, map creation not possible.\n\n-------------------------------------------------------------\n")
 					self.text_field.config(state="disabled")
-			
-			def _viewDatabase():
-				# function for destroying the window after it has been closed
-				def onTableClose():
-					self.table_window.destroy()
-					self.table_window_open=False
-				
-				if not self.table_window_open:
-					self.table_window=TableInterface(self.table_version)
-					self.table_window.protocol('WM_DELETE_WINDOW',lambda: onTableClose())
-					self.table_window_open=True
-				else:
-					self.table_window.focus_set()
 
 			def _makeDatabase():
 				# function for destroying the window after it has been closed
 				def onDatabaseClose():
-					self.database_maker_window.destroy()
-					self.database_maker_window_open=False
+					self.database_window.destroy()
+					self.database_window_open=False
 				
-				if not self.database_maker_window_open:
-					self.database_maker_window=DatabaseMakerInterface(DB_FILE, "Database Configuration")
-					self.database_maker_window.protocol('WM_DELETE_WINDOW',lambda: onDatabaseClose())
-					self.database_maker_window_open=True
+				if not self.database_window_open:
+					self.database_window=DatabaseMakerInterface(DB_FILE, "Database Configuration")
+					self.database_window.protocol('WM_DELETE_WINDOW',lambda: onDatabaseClose())
+					self.database_window_open=True
 				else:
-					self.database_maker_window.focus_set()
+					self.database_window.focus_set()
 
 			ttk.Separator(self.inputselect_frame,orient='horizontal')
 			
 			ttk.Button(self.inputselect_frame,text="Map Editor*",command=lambda: _editMap(user_input, selection))
-			#ttk.Button(self.inputselect_frame,text="View Database", command=lambda: _viewDatabase())
-			ttk.Button(self.inputselect_frame,text="Configure Database",command=lambda: _makeDatabase())
+			ttk.Button(self.inputselect_frame,text="Configure Database*",command=lambda: _makeDatabase())
 			ttk.Button(self.inputselect_frame,text="Save Output to File",command=lambda: _saveOutput())
 			
 			for widget in self.inputselect_frame.winfo_children():
@@ -279,7 +263,7 @@ class WindowContent(tk.Frame):
 			
 			# bind keyboard shortcuts for the buttons
 			self.inputselect_frame.bind_all("<Control-Key-m>", lambda event: _editMap(user_input, selection))
-			self.inputselect_frame.bind_all("<Control-Key-d>", lambda event: _viewDatabase())
+			self.inputselect_frame.bind_all("<Control-Key-d>", lambda event: _makeDatabase())
 			self.inputselect_frame.bind_all("<Control-Key-s>", lambda event: _saveOutput())
 		
 		#function for the checkbuttons in the Options column

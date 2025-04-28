@@ -78,7 +78,7 @@ class SearchDatabase:
 		Get Information on the selected species from the database.
 
 		Returns:
-		- a tuple of strings containing general information (ScientificName, Authority, taxGroup, Vernacular_Eng, Vernacular_Ger)
+		- a tuple of strings containing general information (ScientificName, Authority, Vernacular_Eng, Vernacular_Ger)
 		- a list of strings containing all available accession numbers
 		- a string containing the taxonomic path
 		- a string containing information on the habitats
@@ -88,9 +88,9 @@ class SearchDatabase:
 		idx_list=self.getIDX()
 
 		# database accession for getting basic species information
-		db_query_a = f"SELECT ScientificName, Authority, taxGroup, Vernacular_Eng, Vernacular_Ger FROM taxonomy WHERE IDX=?"
+		db_query_a = f"SELECT ScientificName, Authority, Vernacular_Eng, Vernacular_Ger FROM taxonomy WHERE IDX=?"
 		self.cursor.execute(db_query_a, (idx_list[0],))
-		info_a=self.cursor.fetchone()
+		general_info=self.cursor.fetchone()
 
 		# database accession for getting the accession numbers
 		idx_str = " OR ".join(f"IDX={idx}" for idx in idx_list)
@@ -117,7 +117,7 @@ class SearchDatabase:
 		else:
 			habitat_str=""
 
-		return info_a, acc_list, taxpath_str, habitat_str, idx_list
+		return general_info, acc_list, taxpath_str, habitat_str, idx_list
 
 	def getTaxgroupInfo(self):
 		"""
@@ -366,11 +366,11 @@ def getText(selection,query,gbif_state,ncbi_state,wiki_state,table_state):
 					acc_text=f"Available Accession Number are {', '.join(accList)}\nAvailable Indices are {indexList}\n"
 				
 				# get vernacular name string
-				vern_text=vernacular_text(info_tuple[3], info_tuple[4])
+				vern_text=vernacular_text(info_tuple[2], info_tuple[3])
 				
 				table_list=[
 					"\n--- Information from the core library ---\n",
-					f"\n{info_tuple[0]} {info_tuple[1]} belongs to the {info_tuple[2]}.\n",
+					f"\nSpecies {info_tuple[0]} {info_tuple[1]} found.\n",
 					vern_text+"\n",
 					f"\nThe Species is known to live in {habitats} habitats.\n\n",
 					f"{acc_text}"
