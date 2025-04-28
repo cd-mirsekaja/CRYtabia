@@ -11,6 +11,7 @@ This module constructs the interface for CRYtabia
 #import tkinter for managing GUI
 import tkinter as tk
 from tkinter import ttk
+import os
 
 import getInfo
 from mapInterface import MapInterface

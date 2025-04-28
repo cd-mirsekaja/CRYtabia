@@ -55,19 +55,22 @@ class Trie:
 
 def load_words():
 
-	acc_numbers=cursor.execute("SELECT AccessionNumber FROM ids").fetchall()
-	acc_numbers=set([acc[0] for acc in acc_numbers])
-	
-	genome_ids=cursor.execute("SELECT IDX FROM ids").fetchall()
-	genome_ids=set([str(idx[0]) for idx in genome_ids])
-	
-	sci_names=cursor.execute("SELECT ScientificName FROM taxonomy").fetchall()
-	sci_names=set([name[0] for name in sci_names])
-	
-	taxon_groups=cursor.execute("SELECT Kingdom, Phylum, Class, 'Order', Family, Genus, taxGroup FROM taxonomy").fetchall()
-	taxon_groups=set([group for group_tup in taxon_groups for group in group_tup])
+	try:
+		acc_numbers=cursor.execute("SELECT AccessionNumber FROM ids").fetchall()
+		acc_numbers=set([acc[0] for acc in acc_numbers])
+		
+		genome_ids=cursor.execute("SELECT IDX FROM ids").fetchall()
+		genome_ids=set([str(idx[0]) for idx in genome_ids])
+		
+		sci_names=cursor.execute("SELECT ScientificName FROM taxonomy").fetchall()
+		sci_names=set([name[0] for name in sci_names])
+		
+		taxon_groups=cursor.execute("SELECT Kingdom, Phylum, Class, taxOrder, Family, Genus FROM taxonomy").fetchall()
+		taxon_groups=set([group for group_tup in taxon_groups for group in group_tup])
 
-	return acc_numbers, genome_ids, sci_names, taxon_groups
+		return acc_numbers, genome_ids, sci_names, taxon_groups
+	except:
+		return "", "", "", ""
 
 
 def getSuggestions(selection):

@@ -7,6 +7,7 @@ Usage:
 
 from setuptools import setup
 import os
+from pathlib import Path
 
 
 
@@ -14,7 +15,7 @@ NAME = ['CRYtabia']
 VERSION = ['0.10.0']
 APP = ['main.py']
 DATA_FILES = [
-	'infolib.xlsx',
+	'genome_master_library.db',
 	'images'
 ]
 OPTIONS = {
@@ -25,7 +26,9 @@ OPTIONS = {
 	}
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_FILE = os.path.join(SCRIPT_DIR, "data/genotree_master_library.db")
+#DB_FILE = f"{SCRIPT_DIR}/data/genome_master_library.db"
+DB_FILE = Path(f"{SCRIPT_DIR}/data/genome_master_library.db")
+#DB_FILE = os.path.join(SCRIPT_DIR, "data/genome_master_library.db")
 
 if __name__=='__main__':
 	setup(
