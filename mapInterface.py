@@ -20,8 +20,6 @@ from getInfo import SearchGBIF,internetConnection
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-MAP_ADDON_VERSION = "0.4.0"
-
 class MapInterface(tk.Toplevel):
 	
 	def resizeWindow(self, x: int, y: int, min: bool=True, max: bool=True):
@@ -29,7 +27,7 @@ class MapInterface(tk.Toplevel):
 		self.minsize(x,y) if min else None
 		self.maxsize(x,y) if max else None
 	
-	def __init__(self, selection: str, comment: str):
+	def __init__(self, selection: str, comment: str=""):
 		super().__init__()
 		self.title(f"Occurence Map Editor {comment}")
 		self.resizeWindow(1000, 600)

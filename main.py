@@ -14,8 +14,6 @@ from mainInterface import MainInterface
 
 # import the program name and version from the setup file
 from setup import NAME, VERSION, DB_FILE
-from mapInterface import MAP_ADDON_VERSION
-from tableInterface import TABLE_ADDON_VERSION
 
 # import function for creating an empty database if nessecary
 from GeDaMa.src.createDatabase import createNewDatabase
@@ -30,9 +28,7 @@ def main():
 	
 	main_window=MainInterface(
 		program_name,
-		program_version,
-		MAP_ADDON_VERSION,
-		TABLE_ADDON_VERSION
+		program_version
 		)
 	
 	main_window.focus_set()

@@ -15,7 +15,6 @@ import os
 
 import getInfo
 from mapInterface import MapInterface
-from tableInterface import TableInterface
 from autoComplete import getSuggestions
 from setup import DB_FILE
 from GeDaMa.src.mainInterface import DatabaseMakerInterface
@@ -27,7 +26,7 @@ class MainInterface(tk.Tk):
 		self.minsize(x,y) if min else None
 		self.maxsize(x,y) if max else None
 	
-	def __init__(self,app_title: str, app_version: str, map_version: str, table_version: str):
+	def __init__(self,app_title: str, app_version: str=""):
 		super().__init__()
 		self.title(f'{app_title} {app_version}')
 		self.resizeWindow(1080, 720, max=False)
@@ -35,16 +34,13 @@ class MainInterface(tk.Tk):
 		self.main_frame=tk.Frame(self)
 		self.main_frame.pack(fill='both',expand=True)
 		
-		WindowContent(self.main_frame,map_version,table_version)
+		WindowContent(self.main_frame)
 
 
 class WindowContent(tk.Frame):
 	
-	def __init__(self,main_frame,map_version,table_version):
+	def __init__(self,main_frame):
 		super().__init__(main_frame)
-		
-		self.map_version=map_version
-		self.table_version=table_version
 		
 		# option frame (top)
 		self.option_frame=tk.LabelFrame(main_frame, text='Options (*requires internet access)',border=2,relief='solid',font='Helvetica 14 bold')
@@ -56,7 +52,7 @@ class WindowContent(tk.Frame):
 		self.inputselect_frame=tk.LabelFrame(self.option_frame,text="Search Library by",font="Arial 14",border=0)
 		self.input_frame=tk.LabelFrame(self.option_frame,text="",relief='solid',border=1)
 		self.button_frame=tk.Frame(self.input_frame,relief='solid',border=0)
-		self.extraoptions_frame=tk.LabelFrame(self.option_frame,text="Text Options",border=0)
+		self.extraoptions_frame=tk.LabelFrame(self.option_frame,text="Search Options",border=0)
 		
 		self.inputselect_frame.grid(column=0,row=1,padx=50,pady=20,rowspan=2,sticky='enw')
 		self.input_frame.grid(column=1,row=1,padx=30,pady=20,sticky='enw')
@@ -227,7 +223,7 @@ class WindowContent(tk.Frame):
 							sci_name=getInfo.getSciName(user_input, selection)
 						else:
 							sci_name=""
-						self.map_window=MapInterface(sci_name,self.map_version)
+						self.map_window=MapInterface(sci_name)
 						self.map_window.protocol('WM_DELETE_WINDOW',lambda: onMapClose())
 						self.map_window_open=True
 					else:
