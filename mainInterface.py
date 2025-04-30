@@ -18,6 +18,7 @@ from mapInterface import MapInterface
 from autoComplete import getSuggestions
 from setup import DB_FILE
 from GeDaMa.src.mainInterface import DatabaseMakerInterface
+from GeDaMa.src.createDatabase import count_entries
 
 class MainInterface(tk.Tk):
 	
@@ -48,6 +49,7 @@ class WindowContent(tk.Frame):
 		self.option_frame.columnconfigure(0,weight=1)
 		self.option_frame.columnconfigure(1,weight=1)
 		self.option_frame.columnconfigure(2,weight=1)
+		
 		
 		self.inputselect_frame=tk.LabelFrame(self.option_frame,text="Search Library by",font="Arial 14",border=0)
 		self.input_frame=tk.LabelFrame(self.option_frame,text="",relief='solid',border=1)
@@ -161,7 +163,8 @@ class WindowContent(tk.Frame):
 				# get an object containing all words from the input table
 				self.trie=getSuggestions(selector.get())
 				if selector.get()=="Genome Index":
-					self.input_frame.config(text="Input Genome Index (0-412)")
+
+					self.input_frame.config(text=f"Input Genome Index (0-{count_entries(DB_FILE)-1})")
 				else:
 					self.input_frame.config(text=f"Input {selector.get()}")
 			
@@ -239,6 +242,7 @@ class WindowContent(tk.Frame):
 				def onDatabaseClose():
 					self.database_window.destroy()
 					self.database_window_open=False
+					self.trie = getSuggestions(selection.get())
 				
 				if not self.database_window_open:
 					self.database_window=DatabaseMakerInterface(DB_FILE, "Database Configuration")
